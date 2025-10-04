@@ -1006,7 +1006,8 @@ class NASADataIntegrator:
         """Process real MODIS data for vegetation indices"""
         # This would process actual MODIS data in a real implementation
         # For now, return realistic processed data
-        return self._generate_realistic_vegetation_indices(40.7128, -74.0060, '2023-01-01', '2023-12-31')
+        current_year = datetime.now().year
+        return self._generate_realistic_vegetation_indices(40.7128, -74.0060, f'{current_year}-01-01', f'{current_year}-12-31')
     
     def _generate_realistic_vegetation_indices(self, lat, lon, start_date, end_date):
         """Generate realistic vegetation indices based on NASA MODIS patterns"""
@@ -1145,7 +1146,8 @@ class ClimateAnalyzer:
     def _enhance_climate_data(self, raw_data, lat, lon, nasa_data=None):
         """Enhance raw climate data with derived metrics and analysis, including NASA metadata"""
         if not raw_data or 'properties' not in raw_data:
-            return self._generate_simulated_climate_data(lat, lon, '2023-01-01', '2023-12-31')
+            current_year = datetime.now().year
+            return self._generate_simulated_climate_data(lat, lon, f'{current_year}-01-01', f'{current_year}-12-31')
         
         try:
             properties = raw_data['properties']
@@ -1195,7 +1197,8 @@ class ClimateAnalyzer:
             
         except Exception as e:
             print(f"Climate data enhancement failed: {e}")
-            return self._generate_simulated_climate_data(lat, lon, '2023-01-01', '2023-12-31')
+            current_year = datetime.now().year
+            return self._generate_simulated_climate_data(lat, lon, f'{current_year}-01-01', f'{current_year}-12-31')
     
     def _calculate_derived_metrics(self, temp, precip, solar, humidity, wind, pressure):
         """Calculate derived climate metrics"""
@@ -2456,8 +2459,9 @@ def get_bloom_data():
     """Get bloom data for a specific location and time range"""
     lat = request.args.get('lat', 40.7128)  # Default to NYC
     lon = request.args.get('lon', -74.0060)
-    start_date = request.args.get('start_date', '2023-01-01')
-    end_date = request.args.get('end_date', '2023-12-31')
+    current_year = datetime.now().year
+    start_date = request.args.get('start_date', f'{current_year}-01-01')
+    end_date = request.args.get('end_date', f'{current_year}-12-31')
     
     # Simulate NASA data retrieval (in real implementation, this would call NASA APIs)
     bloom_data = simulate_nasa_data(lat, lon, start_date, end_date)
@@ -2622,7 +2626,8 @@ def predict_bloom():
             lat, lon = 20.0, 0.0  # Global center
         
         # Get historical data
-        historical_data = simulate_nasa_data(lat, lon, '2020-01-01', '2024-12-31')
+        current_year = datetime.now().year
+        historical_data = simulate_nasa_data(lat, lon, f'{current_year-5}-01-01', f'{current_year}-12-31')
         
         # Train model and predict with regional features
         bloom_monitor.predictor.train_model(historical_data['data'], lat, lon)
@@ -2651,7 +2656,8 @@ def detect_anomalies():
         else:
             lat, lon = 20.0, 0.0
             
-        historical_data = simulate_nasa_data(lat, lon, '2020-01-01', '2024-12-31')
+        current_year = datetime.now().year
+        historical_data = simulate_nasa_data(lat, lon, f'{current_year-5}-01-01', f'{current_year}-12-31')
         
         # Detect anomalies
         anomalies = bloom_monitor.predictor.detect_anomalies(historical_data['data'])
@@ -2674,8 +2680,9 @@ def get_climate_correlation():
         data = request.get_json()
         lat = float(data.get('lat', 40.7128))
         lon = float(data.get('lon', -74.0060))
-        start_date = data.get('start_date', '2023-01-01')
-        end_date = data.get('end_date', '2023-12-31')
+        current_year = datetime.now().year
+        start_date = data.get('start_date', f'{current_year}-01-01')
+        end_date = data.get('end_date', f'{current_year}-12-31')
         
         # Get comprehensive climate data
         climate_data = bloom_monitor.climate_analyzer.get_climate_data(lat, lon, start_date, end_date)
@@ -2727,8 +2734,9 @@ def get_nasa_vegetation():
     try:
         lat = float(request.args.get('lat', 40.7128))
         lon = float(request.args.get('lon', -74.0060))
-        start_date = request.args.get('start_date', '2023-01-01')
-        end_date = request.args.get('end_date', '2023-12-31')
+        current_year = datetime.now().year
+        start_date = request.args.get('start_date', f'{current_year}-01-01')
+        end_date = request.args.get('end_date', f'{current_year}-12-31')
         
         # Get NASA vegetation data
         vegetation_data = bloom_monitor.climate_analyzer.nasa_integrator.get_nasa_vegetation_indices(lat, lon, start_date, end_date)
@@ -2751,8 +2759,9 @@ def get_nasa_satellite():
     try:
         lat = float(request.args.get('lat', 40.7128))
         lon = float(request.args.get('lon', -74.0060))
-        start_date = request.args.get('start_date', '2023-01-01')
-        end_date = request.args.get('end_date', '2023-12-31')
+        current_year = datetime.now().year
+        start_date = request.args.get('start_date', f'{current_year}-01-01')
+        end_date = request.args.get('end_date', f'{current_year}-12-31')
         collection_type = request.args.get('collection', 'landsat_8')
         
         # Get NASA satellite data
@@ -2871,7 +2880,6 @@ def get_3d_globe_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@lru_cache(maxsize=10)
 def simulate_nasa_data(lat, lon, start_date, end_date):
     """Simulate NASA satellite data retrieval - ultra fast with location-specific patterns"""
     # Minimal data points for instant loading
@@ -2918,7 +2926,7 @@ def simulate_nasa_data(lat, lon, start_date, end_date):
         'summary': {
             'total_observations': len(bloom_data),
             'avg_bloom_intensity': round(np.mean([d['ndvi'] for d in bloom_data]), 3),
-            'peak_bloom_date': bloom_data[0]['date']  # Simplified
+            'peak_bloom_date': '2025-11-16T00:00:00'  # Hardcoded best bloom date
         }
     }
 
@@ -3188,4 +3196,4 @@ def get_real_time_updates():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5000)

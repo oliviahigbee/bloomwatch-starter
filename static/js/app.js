@@ -1252,8 +1252,8 @@ class BloomWatchApp {
                 body: JSON.stringify({
                     lat: lat,
                     lon: lon,
-                    start_date: '2023-01-01',
-                    end_date: '2023-12-31'
+                    start_date: `${new Date().getFullYear()}-01-01`,
+                    end_date: `${new Date().getFullYear()}-12-31`
                 })
             });
             
@@ -1882,8 +1882,8 @@ class Globe3D {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     lat: 0, lon: 0, // Global data
-                    start_date: '2023-01-01',
-                    end_date: '2023-12-31'
+                    start_date: `${new Date().getFullYear()}-01-01`,
+                    end_date: `${new Date().getFullYear()}-12-31`
                 })
             });
             
@@ -1900,7 +1900,7 @@ class Globe3D {
     
     async loadNASAVegetationData() {
         try {
-            const response = await fetch('/api/nasa-vegetation?lat=0&lon=0&start_date=2023-01-01&end_date=2023-12-31');
+            const response = await fetch(`/api/nasa-vegetation?lat=0&lon=0&start_date=${new Date().getFullYear()}-01-01&end_date=${new Date().getFullYear()}-12-31`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -1920,8 +1920,8 @@ class Globe3D {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     lat: 0, lon: 0, // Global data
-                    start_date: '2023-01-01',
-                    end_date: '2023-12-31'
+                    start_date: `${new Date().getFullYear()}-01-01`,
+                    end_date: `${new Date().getFullYear()}-12-31`
                 })
             });
             
@@ -1943,8 +1943,8 @@ class Globe3D {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     lat: 0, lon: 0, // Global data
-                    start_date: '2023-01-01',
-                    end_date: '2023-12-31'
+                    start_date: `${new Date().getFullYear()}-01-01`,
+                    end_date: `${new Date().getFullYear()}-12-31`
                 })
             });
             
@@ -1961,7 +1961,7 @@ class Globe3D {
     
     async loadNASAElevationData() {
         try {
-            const response = await fetch('/api/nasa-satellite?lat=0&lon=0&start_date=2023-01-01&end_date=2023-12-31&collection=landsat_8');
+            const response = await fetch(`/api/nasa-satellite?lat=0&lon=0&start_date=${new Date().getFullYear()}-01-01&end_date=${new Date().getFullYear()}-12-31&collection=landsat_8`);
             
             if (response.ok) {
                 const data = await response.json();
