@@ -134,13 +134,41 @@ class BloomWatchApp {
             this.refreshData();
         };
         
+        // Global function to select a city from map popup
+        window.selectCity = (cityKey) => {
+            this.currentCity = cityKey;
+            document.getElementById('citySelect').value = cityKey;
+            this.updateLocationFromCity();
+            
+            // Immediately center and zoom to the selected city
+            if (this.cities[cityKey]) {
+                const city = this.cities[cityKey];
+                this.map.setView([city.lat, city.lon], 10);
+                
+                // Update map title and description
+                const mapTitle = document.getElementById('mapTitle');
+                const mapDescription = document.getElementById('mapDescription');
+                if (mapTitle) {
+                    mapTitle.textContent = `${city.name} Bloom Map`;
+                }
+                if (mapDescription) {
+                    mapDescription.textContent = `Bloom data for ${city.name}, ${city.country}`;
+                }
+            }
+            
+            this.refreshData();
+            
+            // Close any open popups
+            this.map.closePopup();
+        };
+        
         window.updateVegetationIndex = () => {
             this.currentVegetationIndex = document.getElementById('vegetationIndex').value;
             this.refreshData();
         };
         
         window.refreshData = () => {
-            this.loadInitialData();
+            this.loadDataForCurrentLocation();
         };
     }
     
@@ -208,6 +236,37 @@ class BloomWatchApp {
         }
     }
     
+    async loadDataForCurrentLocation() {
+        this.showLoading();
+        
+        try {
+            // Update location from current city selection
+            this.updateLocationFromCity();
+            
+            // Load data in parallel for better performance
+            const [bloomData, trends, insights] = await Promise.all([
+                this.fetchBloomData(),
+                this.fetchTrends(),
+                this.fetchConservationInsights()
+            ]);
+            
+            this.currentData = bloomData;
+            
+            // Update all components
+            await this.updateMap(bloomData);
+            this.updateChart(bloomData);
+            this.updateMetrics(bloomData);
+            this.updateTrends(trends);
+            this.updateInsights(insights);
+            
+        } catch (error) {
+            console.error('Error loading data:', error);
+            this.showError('Failed to load data. Please try again.');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
     async fetchBloomData() {
         let url = '/api/bloom-data';
         
@@ -233,7 +292,8 @@ class BloomWatchApp {
     }
     
     async fetchTrends() {
-        const response = await fetch(`/api/trends?location=${this.currentLocation}&years=${this.currentTimeRange}`);
+        const location = this.currentLocation || 'global';
+        const response = await fetch(`/api/trends?location=${location}&years=${this.currentTimeRange}`);
         if (!response.ok) {
             throw new Error('Failed to fetch trends');
         }
@@ -241,7 +301,8 @@ class BloomWatchApp {
     }
     
     async fetchConservationInsights() {
-        const response = await fetch(`/api/conservation-insights?location=${this.currentLocation}`, {
+        const location = this.currentLocation || 'global';
+        const response = await fetch(`/api/conservation-insights?location=${location}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -266,8 +327,70 @@ class BloomWatchApp {
         if (this.currentCity !== 'global' && this.cities[this.currentCity]) {
             const city = this.cities[this.currentCity];
             this.map.setView([city.lat, city.lon], 10);
+            
+            // Add a prominent marker for the selected city
+            const cityMarker = L.circleMarker([city.lat, city.lon], {
+                radius: 12,
+                fillColor: '#e91e63',
+                color: '#fff',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(this.map);
+            
+            cityMarker.bindPopup(`
+                <div class="text-center">
+                    <h6><strong>${city.name}</strong></h6>
+                    <p class="mb-1">${city.country}</p>
+                    <small class="text-muted">${city.description}</small>
+                </div>
+            `);
+            
+            // Update map title and description
+            const mapTitle = document.getElementById('mapTitle');
+            const mapDescription = document.getElementById('mapDescription');
+            if (mapTitle) {
+                mapTitle.textContent = `${city.name} Bloom Map`;
+            }
+            if (mapDescription) {
+                mapDescription.textContent = `Bloom data for ${city.name}, ${city.country}`;
+            }
         } else {
             this.map.setView([20, 0], 2);
+            
+            // Add markers for all available cities in global view
+            Object.entries(this.cities).forEach(([cityKey, city]) => {
+                const cityMarker = L.circleMarker([city.lat, city.lon], {
+                    radius: 8,
+                    fillColor: '#e91e63',
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                }).addTo(this.map);
+                
+                cityMarker.bindPopup(`
+                    <div class="text-center">
+                        <h6><strong>${city.name}</strong></h6>
+                        <p class="mb-1">${city.country}</p>
+                        <small class="text-muted">${city.description}</small>
+                        <br><br>
+                        <button class="btn btn-sm btn-success" onclick="selectCity('${cityKey}')">
+                            View ${city.name}
+                        </button>
+                    </div>
+                `);
+            });
+            
+            // Update map title and description
+            const mapTitle = document.getElementById('mapTitle');
+            const mapDescription = document.getElementById('mapDescription');
+            if (mapTitle) {
+                mapTitle.textContent = 'Global Bloom Map - All Cities';
+            }
+            if (mapDescription) {
+                mapDescription.textContent = 'Click on pink city markers to view detailed bloom data';
+            }
         }
         
         // Add bloom intensity markers
@@ -345,11 +468,22 @@ class BloomWatchApp {
         const peakDate = new Date(bloomData.summary.peak_bloom_date).toLocaleDateString();
         
         // Update current intensity
-        document.getElementById('currentIntensity').textContent = latestData[this.currentVegetationIndex].toFixed(3);
-        document.getElementById('intensityBar').style.width = `${latestData[this.currentVegetationIndex] * 100}%`;
+        const currentIntensity = latestData[this.currentVegetationIndex];
+        document.getElementById('currentIntensity').textContent = currentIntensity.toFixed(3);
+        document.getElementById('intensityBar').style.width = `${currentIntensity * 100}%`;
         
         // Update peak date
         document.getElementById('peakDate').textContent = peakDate;
+        
+        // Update location display
+        const locationElement = document.getElementById('currentLocationDisplay');
+        if (locationElement) {
+            if (this.currentLocation !== 'global') {
+                locationElement.innerHTML = `<i class="fas fa-map-marker-alt me-1"></i>${this.currentLocation}`;
+            } else {
+                locationElement.innerHTML = `<i class="fas fa-satellite me-1"></i>Powered by NASA Earth Observation Data`;
+            }
+        }
     }
     
     updateTrends(trends) {

@@ -250,25 +250,39 @@ def get_conservation_insights():
     location = request.args.get('location', 'global')
     bloom_data = request.get_json() if request.method == 'POST' else {}
     
-    insights = generate_conservation_insights(location, bloom_data)
+    # Convert bloom_data to a hashable string for caching
+    bloom_data_str = str(sorted(bloom_data.items())) if bloom_data else 'empty'
+    insights = generate_conservation_insights(location, bloom_data_str)
     return jsonify(insights)
 
 @lru_cache(maxsize=10)
 def simulate_nasa_data(lat, lon, start_date, end_date):
-    """Simulate NASA satellite data retrieval - ultra fast"""
+    """Simulate NASA satellite data retrieval - ultra fast with location-specific patterns"""
     # Minimal data points for instant loading
     dates = pd.date_range(start=start_date, end=end_date, freq='90D')  # Quarterly data only
     
-    # Pre-calculated seasonal pattern
-    base_intensity = 0.5
-    seasonal_variation = 0.3
+    # Location-specific base intensity based on latitude and longitude
+    # Higher latitudes (colder) have lower base intensity, tropical regions have higher
+    lat_factor = 1.0 - abs(float(lat)) / 90.0  # 0 at poles, 1 at equator
+    lon_factor = 0.8 + 0.4 * np.sin(float(lon) * np.pi / 180)  # Vary by longitude
     
-    # Create minimal data set
+    base_intensity = 0.3 + 0.4 * lat_factor * lon_factor
+    seasonal_variation = 0.2 + 0.1 * lat_factor  # More seasonal variation at higher latitudes
+    
+    # Create minimal data set with location-specific patterns
     bloom_data = []
     for i, date in enumerate(dates):
-        # Simple seasonal pattern
-        intensity = base_intensity + seasonal_variation * np.sin(2 * np.pi * i / len(dates))
+        # Seasonal pattern varies by latitude (hemisphere effect)
+        hemisphere_factor = 1.0 if float(lat) >= 0 else -1.0
+        seasonal_phase = hemisphere_factor * 2 * np.pi * i / len(dates)
+        
+        intensity = base_intensity + seasonal_variation * np.sin(seasonal_phase)
         intensity = max(0.1, min(0.9, intensity))  # Clamp values
+        
+        # Add some location-specific noise
+        location_noise = 0.05 * np.sin(float(lat) * np.pi / 180) * np.cos(float(lon) * np.pi / 180)
+        intensity += location_noise
+        intensity = max(0.1, min(0.9, intensity))
         
         bloom_data.append({
             'date': date.isoformat(),
@@ -357,7 +371,7 @@ def simulate_trend_analysis(location, years):
     }
 
 @lru_cache(maxsize=10)
-def generate_conservation_insights(location, bloom_data):
+def generate_conservation_insights(location, bloom_data_str):
     """Generate conservation insights and recommendations - ultra fast"""
     # Simple location-based insights
     priority_levels = ['low', 'medium', 'high']

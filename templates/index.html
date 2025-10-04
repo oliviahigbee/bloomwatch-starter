@@ -19,7 +19,7 @@
                 <i class="fas fa-seedling me-2"></i>BloomWatch
             </a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text">
+                <span class="navbar-text" id="currentLocationDisplay">
                     <i class="fas fa-satellite me-1"></i>Powered by NASA Earth Observation Data
                 </span>
             </div>
@@ -145,8 +145,9 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-map me-2"></i>Global Bloom Map
+                            <i class="fas fa-map me-2"></i><span id="mapTitle">Global Bloom Map</span>
                         </h5>
+                        <small class="text-muted" id="mapDescription">Click on city markers to view detailed bloom data</small>
                     </div>
                     <div class="card-body p-0">
                         <div id="globalMap" style="height: 500px;"></div>
