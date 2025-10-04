@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Plants Finder</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <h1>Find Local Plants in Your City</h1>
+
+    <form id="city-form">
+        <label for="city">Enter City: </label>
+        <input type="text" id="city" name="city" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <h2>Local Plants:</h2>
+    <ul id="plants-list"></ul>
+
+    <script>
+        // Handle form submission
+        $('#city-form').submit(function(event) {
+            event.preventDefault();
+            var city = $('#city').val().trim();
+
+            if (city) {
+                // Fetch plants for the entered city
+                $.get(`/get-plants?city=${city}`, function(data) {
+                    // Clear previous results
+                    $('#plants-list').empty();
+
+                    if (data.error) {
+                        $('#plants-list').append('<li>' + data.error + '</li>');
+                    } else {
+                        // Display each plant result
+                        data.forEach(function(plant, index) {
+                            $('#plants-list').append(
+                                `<li>
+                                    <strong>${plant.title}</strong><br>
+                                    <a href="${plant.link}" target="_blank">${plant.link}</a><br>
+                                    <p>${plant.snippet}</p>
+                                </li>`
+                            );
+                        });
+                    }
+                }).fail(function() {
+                    $('#plants-list').append('<li>Error fetching data</li>');
+                });
+            } else {
+                alert('Please enter a city.');
+            }
+        });
+    </script>
+
+</body>
+</html>
