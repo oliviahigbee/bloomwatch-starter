@@ -1010,26 +1010,148 @@ class BloomWatchApp {
         
         if (climateCard) {
             const correlations = climateData.correlations;
-            const correlationItems = Object.entries(correlations).map(([key, value]) => `
+            const climateSummary = climateData.climate_summary || {};
+            const dataQuality = climateData.data_quality || {};
+            
+            // Basic correlations
+            const basicCorrelations = correlations.basic_correlations || {};
+            const correlationItems = Object.entries(basicCorrelations).map(([key, value]) => `
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="text-capitalize">${key.replace('_', ' ')}</span>
-                    <span class="badge bg-${Math.abs(value) > 0.5 ? 'primary' : 'secondary'}">
+                    <span class="badge bg-${Math.abs(value) > 0.5 ? 'primary' : Math.abs(value) > 0.3 ? 'warning' : 'secondary'}">
                         ${value.toFixed(3)}
                     </span>
                 </div>
             `).join('');
             
+            // Climate zone information
+            const climateZone = climateSummary.climate_zone || {};
+            const zoneInfo = climateZone.name ? `
+                <div class="mb-3">
+                    <h6 class="text-primary"><i class="fas fa-globe me-2"></i>Climate Zone</h6>
+                    <p class="mb-1"><strong>${climateZone.name}</strong> (${climateZone.zone})</p>
+                    <small class="text-muted">${climateZone.description}</small>
+                </div>
+            ` : '';
+            
+            // Derived metrics
+            const derivedMetrics = climateSummary.derived_metrics || {};
+            const metricsInfo = derivedMetrics.temperature ? `
+                <div class="mb-3">
+                    <h6 class="text-success"><i class="fas fa-chart-bar me-2"></i>Climate Metrics</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small><strong>Avg Temp:</strong> ${derivedMetrics.temperature.mean?.toFixed(1)}°C</small><br>
+                            <small><strong>Precipitation:</strong> ${derivedMetrics.precipitation?.total?.toFixed(0)}mm</small>
+                        </div>
+                        <div class="col-6">
+                            <small><strong>Growing Days:</strong> ${derivedMetrics.climate_indices?.growing_degree_days?.toFixed(0)}</small><br>
+                            <small><strong>Aridity:</strong> ${derivedMetrics.climate_indices?.aridity_index?.toFixed(2)}</small>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+            
+            // Growing conditions
+            const growingConditions = climateSummary.growing_conditions || {};
+            const growingInfo = growingConditions.category ? `
+                <div class="mb-3">
+                    <h6 class="text-warning"><i class="fas fa-seedling me-2"></i>Growing Conditions</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Overall Score</span>
+                        <span class="badge bg-${growingConditions.category === 'excellent' ? 'success' : growingConditions.category === 'good' ? 'primary' : growingConditions.category === 'moderate' ? 'warning' : 'danger'}">
+                            ${(growingConditions.overall_score * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-${growingConditions.category === 'excellent' ? 'success' : growingConditions.category === 'good' ? 'primary' : growingConditions.category === 'moderate' ? 'warning' : 'danger'}" 
+                             style="width: ${growingConditions.overall_score * 100}%"></div>
+                    </div>
+                    <small class="text-muted">${growingConditions.category.replace('_', ' ')} conditions</small>
+                </div>
+            ` : '';
+            
+            // Extreme events
+            const extremeEvents = climateSummary.extreme_events || {};
+            const eventsInfo = extremeEvents.total_events > 0 ? `
+                <div class="mb-3">
+                    <h6 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Extreme Events</h6>
+                    <p class="mb-1"><strong>${extremeEvents.total_events}</strong> events detected</p>
+                    <small class="text-muted">Types: ${extremeEvents.event_types?.join(', ') || 'None'}</small>
+                </div>
+            ` : '';
+            
+            // Relationship analysis
+            const relationshipAnalysis = correlations.relationship_analysis || {};
+            const relationshipInfo = relationshipAnalysis.primary_drivers?.length > 0 ? `
+                <div class="mb-3">
+                    <h6 class="text-info"><i class="fas fa-link me-2"></i>Climate-Bloom Relationships</h6>
+                    <p class="mb-1"><strong>Primary Drivers:</strong> ${relationshipAnalysis.primary_drivers?.join(', ') || 'None'}</p>
+                    <p class="mb-1"><strong>Relationship Strength:</strong> <span class="badge bg-${relationshipAnalysis.relationship_strength === 'strong' ? 'success' : relationshipAnalysis.relationship_strength === 'moderate' ? 'warning' : 'secondary'}">${relationshipAnalysis.relationship_strength}</span></p>
+                    ${relationshipAnalysis.key_insights?.length > 0 ? `
+                        <div class="mt-2">
+                            <small class="text-muted"><strong>Key Insights:</strong></small>
+                            <ul class="small text-muted mb-0">
+                                ${relationshipAnalysis.key_insights.slice(0, 2).map(insight => `<li>${insight}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+            
+            // Seasonal analysis
+            const seasonalAnalysis = climateSummary.seasonal_analysis || {};
+            const seasonalInfo = seasonalAnalysis.peak_seasons ? `
+                <div class="mb-3">
+                    <h6 class="text-secondary"><i class="fas fa-calendar-alt me-2"></i>Seasonal Patterns</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small><strong>Temp Peak:</strong> ${seasonalAnalysis.peak_seasons.temperature?.peak_season || 'Unknown'}</small><br>
+                            <small><strong>Precip Peak:</strong> ${seasonalAnalysis.peak_seasons.precipitation?.peak_season || 'Unknown'}</small>
+                        </div>
+                        <div class="col-6">
+                            <small><strong>Growing Season:</strong> ${seasonalAnalysis.growing_season?.length_months || 0} months</small><br>
+                            <small><strong>Start Month:</strong> ${seasonalAnalysis.growing_season?.start_month || 'Unknown'}</small>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+            
+            // Data quality info
+            const qualityInfo = dataQuality.analysis_completeness ? `
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-database me-1"></i>
+                        Analysis: ${dataQuality.analysis_completeness} | 
+                        Climate Points: ${dataQuality.climate_data_points} | 
+                        Bloom Points: ${dataQuality.bloom_data_points}
+                    </small>
+                </div>
+            ` : '';
+            
             climateCard.innerHTML = `
                 <div class="card-header bg-info text-white">
-                    <h6 class="mb-0"><i class="fas fa-thermometer-half me-2"></i>Climate Correlation</h6>
+                    <h6 class="mb-0"><i class="fas fa-thermometer-half me-2"></i>Comprehensive Climate Analysis</h6>
                 </div>
                 <div class="card-body">
-                    <p class="mb-3">Bloom pattern correlation with climate variables:</p>
-                    ${correlationItems}
+                    ${zoneInfo}
+                    ${metricsInfo}
+                    ${growingInfo}
+                    ${eventsInfo}
+                    ${relationshipInfo}
+                    ${seasonalInfo}
+                    
+                    <div class="mb-3">
+                        <h6 class="text-primary"><i class="fas fa-chart-line me-2"></i>Climate Correlations</h6>
+                        ${correlationItems}
+                    </div>
+                    
+                    ${qualityInfo}
+                    
                     <hr>
                     <small class="text-muted">
                         <i class="fas fa-info-circle me-1"></i>
-                        Values closer to ±1.0 indicate stronger correlation
+                        Values closer to ±1.0 indicate stronger correlation. Analysis includes statistical significance testing.
                     </small>
                 </div>
             `;
