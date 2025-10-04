@@ -2633,6 +2633,16 @@ def index():
     """Main dashboard page"""
     return render_template('index.html')
 
+@app.route('/test')
+def test():
+    """Test page for debugging"""
+    return app.send_static_file('test_frontend.html')
+
+@app.route('/debug')
+def debug():
+    """Debug page for testing"""
+    return app.send_static_file('debug_test.html')
+
 @app.route('/api/bloom-data')
 def get_bloom_data():
     """Get bloom data for a specific location and time range"""
@@ -3663,4 +3673,4 @@ def serpapi_corn_prices():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5000)

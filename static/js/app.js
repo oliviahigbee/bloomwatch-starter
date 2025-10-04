@@ -3118,9 +3118,12 @@ class SerpApiManager {
     }
 
     async checkStatus() {
+        console.log('SerpApiManager: Checking status...');
         try {
             const response = await fetch('/api/serpapi/status');
+            console.log('SerpApiManager: Status response:', response);
             this.status = await response.json();
+            console.log('SerpApiManager: Status data:', this.status);
             this.updateStatusDisplay();
         } catch (error) {
             console.error('Failed to check SerpApi status:', error);
@@ -3129,12 +3132,16 @@ class SerpApiManager {
     }
 
     updateStatusDisplay(type = null, message = null) {
+        console.log('SerpApiManager: Updating status display...');
         const statusElement = document.getElementById('serpapiStatus');
         const statusText = document.getElementById('serpapiStatusText');
+        
+        console.log('SerpApiManager: Status element found:', !!statusElement);
+        console.log('SerpApiManager: Status text element found:', !!statusText);
 
         if (type === 'error') {
-            statusElement.className = 'alert alert-danger';
-            statusText.textContent = message || 'SerpApi service error';
+            if (statusElement) statusElement.className = 'alert alert-danger';
+            if (statusText) statusText.textContent = message || 'SerpApi service error';
             return;
         }
 
@@ -3650,6 +3657,8 @@ function clearAgriculturalResults() {
 
 // Initialize SerpApi manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing SerpApi managers...');
     window.serpapiManager = new SerpApiManager();
     window.agriculturalPricesManager = new AgriculturalPricesManager();
+    console.log('SerpApi managers initialized');
 });
