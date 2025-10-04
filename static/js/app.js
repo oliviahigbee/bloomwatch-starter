@@ -394,6 +394,28 @@ class BloomWatchApp {
             });
         };
         
+        // Citizen Science Observation Functions
+        window.showObservationForm = () => {
+            const modal = new bootstrap.Modal(document.getElementById('observationModal'));
+            modal.show();
+        };
+        
+        window.previewImage = (input) => {
+            this.previewImage(input);
+        };
+        
+        window.removeImage = () => {
+            this.removeImage();
+        };
+        
+        window.submitObservation = () => {
+            this.submitObservation();
+        };
+        
+        window.showCitizenScience = () => {
+            this.showCitizenScience();
+        };
+        
         // Global functions for form controls
         window.updateCity = () => {
             this.currentCity = document.getElementById('citySelect').value;
@@ -559,6 +581,29 @@ class BloomWatchApp {
             this.showError('Failed to load data. Please try again.');
         } finally {
             this.hideLoading();
+        }
+    }
+    
+    async loadLocationData(location, isRealTime = false) {
+        try {
+            this.currentLocation = location;
+            
+            if (isRealTime) {
+                // For real-time updates, just refresh current data
+                await this.loadDataForCurrentLocation();
+            } else {
+                // For initial load, load all data
+                await this.loadDataForCurrentLocation();
+                await this.fetchBloomData();
+                await this.fetchGlobalBloomMap();
+                await this.fetchTrends();
+                await this.fetchConservationInsights();
+            }
+        } catch (error) {
+            console.error('Error loading location data:', error);
+            if (!isRealTime) {
+                this.showError('Failed to load data for this location.');
+            }
         }
     }
     
@@ -1475,22 +1520,47 @@ class BloomWatchApp {
         const citizenCard = document.getElementById('citizenCard');
         
         if (citizenCard && data.observations.length > 0) {
-            const observationsList = data.observations.map(obs => `
-                <div class="observation-item mb-3 p-3 border rounded">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">${obs.species}</h6>
-                            <p class="mb-1 text-muted">${obs.bloom_status.replace('_', ' ')}</p>
-                            <small class="text-muted">by ${obs.observer} on ${new Date(obs.date).toLocaleDateString()}</small>
-                        </div>
-                        <span class="badge bg-success">${(obs.confidence * 100).toFixed(0)}%</span>
+            const observationsList = data.observations.map(obs => {
+                const hasImage = obs.photo_url;
+                const imageHtml = hasImage ? `
+                    <div class="col-md-3">
+                        <img src="${obs.photo_url}" class="img-thumbnail" style="max-width: 100px; max-height: 100px;" alt="Plant observation">
                     </div>
-                </div>
-            `).join('');
+                ` : '';
+                
+                const descriptionHtml = obs.description ? `
+                    <p class="mb-2 text-muted small">${obs.description}</p>
+                ` : '';
+                
+                return `
+                    <div class="observation-item mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-${hasImage ? '9' : '12'}">
+                                <h6 class="mb-1">${obs.title || obs.species}</h6>
+                                <p class="mb-1 text-muted">
+                                    <i class="fas fa-leaf me-1"></i>${obs.species.replace('_', ' ')} - 
+                                    <span class="badge bg-info">${obs.bloom_status.replace('_', ' ')}</span>
+                                </p>
+                                ${descriptionHtml}
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>by ${obs.observer} 
+                                    <i class="fas fa-calendar me-1 ms-2"></i>${new Date(obs.date).toLocaleDateString()}
+                                    ${obs.location_name ? `<i class="fas fa-map-marker-alt me-1 ms-2"></i>${obs.location_name}` : ''}
+                                </small>
+                            </div>
+                            ${imageHtml}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="badge bg-success">${(obs.confidence * 100).toFixed(0)}% confidence</span>
+                            ${obs.verified ? '<span class="badge bg-primary"><i class="fas fa-check me-1"></i>Verified</span>' : '<span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Pending</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
             
             citizenCard.innerHTML = `
                 <div class="card-header bg-success text-white">
-                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Citizen Science Observations</h6>
+                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>🌱 Citizen Science Observations</h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-3">${data.contribution_message}</p>
@@ -1498,7 +1568,7 @@ class BloomWatchApp {
                         ${observationsList}
                     </div>
                     <button class="btn btn-outline-success btn-sm mt-3" onclick="showObservationForm()">
-                        <i class="fas fa-plus me-1"></i>Submit Observation
+                        <i class="fas fa-plus me-1"></i>🌱 Share Your Observation!
                     </button>
                 </div>
             `;
@@ -1509,6 +1579,120 @@ class BloomWatchApp {
     async submitCitizenObservation() {
         // This would open a form modal in a real implementation
         this.showSuccess('Citizen science observation form would open here!');
+    }
+    
+    async showCitizenScience() {
+        try {
+            // Load and display citizen science observations
+            await this.loadCitizenObservations();
+            
+            // Scroll to the citizen science section
+            const citizenCard = document.getElementById('citizenCard');
+            if (citizenCard) {
+                citizenCard.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error('Error showing citizen science:', error);
+            this.showError('Failed to load citizen science data. Please try again.');
+        }
+    }
+    
+    // Image preview functionality
+    previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    // Remove image preview
+    removeImage() {
+        document.getElementById('observationImage').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('previewImg').src = '';
+    }
+    
+    // Submit observation form
+    async submitObservation() {
+        const form = document.getElementById('observationForm');
+        const formData = new FormData();
+        
+        // Get form values
+        const title = document.getElementById('observationTitle').value;
+        const species = document.getElementById('plantSpecies').value;
+        const bloomStatus = document.getElementById('bloomStatus').value;
+        const observerName = document.getElementById('observerName').value;
+        const description = document.getElementById('observationText').value;
+        const location = document.getElementById('location').value;
+        const imageFile = document.getElementById('observationImage').files[0];
+        
+        // Validate required fields
+        if (!title || !species || !bloomStatus || !location) {
+            this.showError('Please fill in all required fields! 🌱');
+            return;
+        }
+        
+        // Add form data
+        formData.append('title', title);
+        formData.append('species', species);
+        formData.append('bloom_status', bloomStatus);
+        formData.append('observer', observerName || 'Anonymous');
+        formData.append('description', description);
+        formData.append('location', location);
+        
+        // Add image if selected
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        
+        try {
+            this.showLoading('Submitting your observation... 🌱');
+            
+            const response = await fetch('/api/citizen-science', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                this.hideLoading();
+                this.showSuccess(result.message);
+                
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('observationModal'));
+                modal.hide();
+                this.resetObservationForm();
+                
+                // Reload citizen observations to show the new one
+                this.loadCitizenObservations();
+                
+                // Show contribution points
+                if (result.contribution_points) {
+                    setTimeout(() => {
+                        this.showSuccess(`You earned ${result.contribution_points} contribution points! 🌟`);
+                    }, 2000);
+                }
+            } else {
+                this.hideLoading();
+                this.showError(result.error || 'Failed to submit observation. Please try again.');
+            }
+        } catch (error) {
+            this.hideLoading();
+            this.showError('Network error. Please check your connection and try again.');
+            console.error('Error submitting observation:', error);
+        }
+    }
+    
+    // Reset observation form
+    resetObservationForm() {
+        document.getElementById('observationForm').reset();
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('previewImg').src = '';
     }
     
     async show3DGlobe() {

@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import json
 import os
+import uuid
 from dotenv import load_dotenv
 from functools import lru_cache
 import joblib
@@ -2828,25 +2829,80 @@ def citizen_science():
     
     elif request.method == 'POST':
         # Accept new citizen science observations
-        data = request.get_json()
-        
-        # Validate and store observation (in real implementation, save to database)
-        observation = {
-            'id': len(data) + 1,  # Simple ID generation
-            'location': data.get('location'),
-            'species': data.get('species'),
-            'bloom_status': data.get('bloom_status'),
-            'observer': data.get('observer', 'Anonymous'),
-            'date': datetime.now().isoformat(),
-            'confidence': data.get('confidence', 0.5),
-            'notes': data.get('notes', '')
-        }
-        
-        return jsonify({
-            'message': 'Observation recorded successfully!',
-            'observation': observation,
-            'contribution_points': 10
-        })
+        try:
+            # Handle both JSON and form data
+            if request.content_type and 'application/json' in request.content_type:
+                data = request.get_json()
+                image_url = None
+            else:
+                # Handle form data with file upload
+                data = {
+                    'title': request.form.get('title'),
+                    'species': request.form.get('species'),
+                    'bloom_status': request.form.get('bloom_status'),
+                    'observer': request.form.get('observer', 'Anonymous'),
+                    'description': request.form.get('description', ''),
+                    'location': request.form.get('location')
+                }
+                
+                # Handle image upload
+                image_url = None
+                if 'image' in request.files:
+                    image_file = request.files['image']
+                    if image_file and image_file.filename:
+                        # Create uploads directory if it doesn't exist
+                        upload_dir = os.path.join(app.static_folder, 'uploads')
+                        os.makedirs(upload_dir, exist_ok=True)
+                        
+                        # Generate unique filename
+                        filename = f"{uuid.uuid4().hex}_{image_file.filename}"
+                        filepath = os.path.join(upload_dir, filename)
+                        image_file.save(filepath)
+                        image_url = f"/static/uploads/{filename}"
+            
+            # Validate required fields
+            required_fields = ['title', 'species', 'bloom_status', 'location']
+            for field in required_fields:
+                if not data.get(field):
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
+            
+            # Generate simple coordinates based on location (in real app, use geocoding)
+            location_coords = {
+                'lat': 40.7128 + (hash(data['location']) % 100) / 1000,  # Simple hash-based coords
+                'lon': -74.0060 + (hash(data['location']) % 100) / 1000
+            }
+            
+            # Create observation object
+            observation = {
+                'id': int(datetime.now().timestamp()),  # Use timestamp as ID
+                'title': data.get('title'),
+                'location': location_coords,
+                'location_name': data.get('location'),
+                'species': data.get('species'),
+                'bloom_status': data.get('bloom_status'),
+                'observer': data.get('observer', 'Anonymous'),
+                'date': datetime.now().isoformat(),
+                'description': data.get('description', ''),
+                'confidence': 0.8,  # Default confidence for user submissions
+                'photo_url': image_url,
+                'verified': False  # New observations need verification
+            }
+            
+            # In a real implementation, save to database
+            # For now, we'll return success with the observation data
+            
+            return jsonify({
+                'message': '🌱 Your observation has been recorded successfully! Thank you for helping scientists!',
+                'observation': observation,
+                'contribution_points': 15,
+                'success': True
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'error': f'Failed to record observation: {str(e)}',
+                'success': False
+            }), 500
 
 @app.route('/api/3d-globe-data')
 def get_3d_globe_data():

@@ -205,9 +205,26 @@
                                 </button>
                             </div>
                             <div class="col-md-3">
+                                <button class="btn btn-success w-100" onclick="showCitizenScience()">
+                                    <i class="fas fa-users me-2"></i>🌱 Citizen Science
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Features Row -->
+                        <div class="row mt-3">
+                            <div class="col-md-3">
                                 <button class="btn btn-dark w-100" onclick="view3DGlobe()">
                                     <i class="fas fa-globe me-2"></i>🌍 3D Earth Explorer
                                 </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-primary w-100" onclick="showObservationForm()">
+                                    <i class="fas fa-plus me-2"></i>📝 Share Observation
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Empty space for future features -->
                             </div>
                         </div>
                         
@@ -567,6 +584,128 @@
         </div>
     </div>
 
+    <!-- Citizen Science Observation Modal -->
+    <div class="modal fade" id="observationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-seedling me-2"></i>🌱 Share Your Plant Observation!
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="observationForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="observationTitle" class="form-label">
+                                        <i class="fas fa-heading me-1"></i>🌿 What did you see?
+                                    </label>
+                                    <input type="text" class="form-control" id="observationTitle" 
+                                           placeholder="e.g., Beautiful Cherry Blossoms in the Park" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="plantSpecies" class="form-label">
+                                        <i class="fas fa-leaf me-1"></i>🌱 Plant Type
+                                    </label>
+                                    <select class="form-select" id="plantSpecies" required>
+                                        <option value="">Choose a plant type...</option>
+                                        <option value="cherry_blossom">🌸 Cherry Blossom</option>
+                                        <option value="daffodil">🌼 Daffodil</option>
+                                        <option value="tulip">🌷 Tulip</option>
+                                        <option value="rose">🌹 Rose</option>
+                                        <option value="sunflower">🌻 Sunflower</option>
+                                        <option value="lily">🌺 Lily</option>
+                                        <option value="daisy">🌼 Daisy</option>
+                                        <option value="lavender">💜 Lavender</option>
+                                        <option value="oak_tree">🌳 Oak Tree</option>
+                                        <option value="pine_tree">🌲 Pine Tree</option>
+                                        <option value="maple_tree">🍁 Maple Tree</option>
+                                        <option value="other">🌿 Other Plant</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="bloomStatus" class="form-label">
+                                        <i class="fas fa-chart-line me-1"></i>📈 How is it growing?
+                                    </label>
+                                    <select class="form-select" id="bloomStatus" required>
+                                        <option value="">Choose growth stage...</option>
+                                        <option value="budding">🌱 Just Starting to Grow</option>
+                                        <option value="early_bloom">🌿 Beginning to Bloom</option>
+                                        <option value="full_bloom">🌸 Fully Bloomed</option>
+                                        <option value="late_bloom">🍂 Almost Done Blooming</option>
+                                        <option value="dormant">😴 Sleeping for Winter</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="observerName" class="form-label">
+                                        <i class="fas fa-user me-1"></i>👤 Your Name (optional)
+                                    </label>
+                                    <input type="text" class="form-control" id="observerName" 
+                                           placeholder="e.g., Nature Explorer">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="observationText" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>📝 Tell us about it!
+                                    </label>
+                                    <textarea class="form-control" id="observationText" rows="4" 
+                                              placeholder="Describe what you saw! What color was it? How big? Any interesting details?"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="observationImage" class="form-label">
+                                        <i class="fas fa-camera me-1"></i>📸 Add a Photo (optional)
+                                    </label>
+                                    <input type="file" class="form-control" id="observationImage" 
+                                           accept="image/*" onchange="previewImage(this)">
+                                    <div class="form-text">Take a picture of the plant you observed!</div>
+                                </div>
+                                
+                                <div class="mb-3" id="imagePreview" style="display: none;">
+                                    <label class="form-label">📸 Photo Preview</label>
+                                    <div class="text-center">
+                                        <img id="previewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="removeImage()">
+                                            <i class="fas fa-trash me-1"></i>Remove Photo
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>📍 Where did you see it?
+                                    </label>
+                                    <input type="text" class="form-control" id="location" 
+                                           placeholder="e.g., Central Park, New York" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Thank you for helping scientists!</strong> Your observations help us understand how plants grow around the world! 🌍✨
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="submitObservation()">
+                        <i class="fas fa-paper-plane me-1"></i>🌱 Share My Observation!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 3D Globe Modal -->
     <div class="modal fade" id="globeModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl">
@@ -654,7 +793,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.6"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.7"></script>
     
     <!-- Service Worker Registration -->
     <script>

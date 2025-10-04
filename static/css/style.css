@@ -805,3 +805,193 @@ h1:hover, h2:hover, h3:hover, h4:hover, h5:hover, h6:hover {
     color: var(--bright-blue);
     font-weight: bold;
 }
+
+/* Citizen Science Observation Styles */
+.observation-item {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e9ecef !important;
+    border-radius: 15px !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.observation-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-green) !important;
+}
+
+.observation-item img {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.observation-item img:hover {
+    transform: scale(1.05);
+}
+
+/* Observation Form Styles */
+#observationModal .modal-content {
+    border-radius: 25px;
+    border: 3px solid var(--primary-green);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+#observationModal .modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--grass-green) 100%);
+    color: white;
+    border-radius: 25px 25px 0 0;
+    border-bottom: 3px solid var(--sunny-yellow);
+}
+
+#observationModal .modal-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+}
+
+#observationModal .form-control,
+#observationModal .form-select {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 600;
+}
+
+#observationModal .form-control:focus,
+#observationModal .form-select:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.3rem rgba(76, 175, 80, 0.25);
+    transform: scale(1.02);
+}
+
+#observationModal .form-label {
+    font-weight: 700;
+    color: var(--primary-green);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+}
+
+#observationModal .btn-success {
+    background: linear-gradient(45deg, var(--primary-green), var(--grass-green));
+    border: none;
+    border-radius: 25px;
+    font-weight: 700;
+    padding: 12px 30px;
+    transition: all 0.3s ease;
+}
+
+#observationModal .btn-success:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+#imagePreview {
+    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 15px;
+    border: 2px solid var(--sunny-yellow);
+}
+
+#previewImg {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Badge styles for observations */
+.badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.badge.bg-success {
+    background: linear-gradient(45deg, var(--primary-green), var(--grass-green)) !important;
+}
+
+.badge.bg-info {
+    background: linear-gradient(45deg, var(--bright-blue), var(--sky-blue)) !important;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(45deg, var(--sunny-yellow), var(--orange-energy)) !important;
+    color: #333 !important;
+}
+
+.badge.bg-primary {
+    background: linear-gradient(45deg, var(--purple-magic), #673AB7) !important;
+}
+
+/* Form validation styles */
+.form-control.is-invalid {
+    border-color: var(--coral-pink);
+    box-shadow: 0 0 0 0.3rem rgba(255, 87, 34, 0.25);
+}
+
+.form-control.is-valid {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.3rem rgba(76, 175, 80, 0.25);
+}
+
+/* Loading states for form submission */
+.form-submitting {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.form-submitting .btn {
+    position: relative;
+}
+
+.form-submitting .btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Success/Error message styles */
+.alert {
+    border-radius: 15px;
+    border: none;
+    font-weight: 600;
+    font-family: 'Comic Neue', cursive;
+}
+
+.alert-info {
+    background: linear-gradient(145deg, rgba(33, 150, 243, 0.1) 0%, rgba(3, 169, 244, 0.1) 100%);
+    color: var(--bright-blue);
+    border-left: 4px solid var(--bright-blue);
+}
+
+/* Responsive adjustments for observation form */
+@media (max-width: 768px) {
+    #observationModal .modal-dialog {
+        margin: 10px;
+    }
+    
+    #observationModal .modal-content {
+        border-radius: 20px;
+    }
+    
+    #observationModal .modal-header {
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .observation-item {
+        margin-bottom: 15px;
+    }
+    
+    .observation-item img {
+        max-width: 80px;
+        max-height: 80px;
+    }
+}
