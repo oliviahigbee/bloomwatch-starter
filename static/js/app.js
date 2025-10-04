@@ -671,76 +671,125 @@ class BloomWatchApp {
             const vegetationChars = regional.vegetation_characteristics || [];
             const dominantFactors = regional.dominant_factors || [];
             
-            predictionCard.innerHTML = `
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Enhanced AI Bloom Prediction</h6>
-                </div>
-                <div class="card-body">
+            // Check if we have enhanced features
+            const hasEnhancedFeatures = prediction.regional_analysis || prediction.prediction_details || prediction.individual_predictions;
+            
+            if (hasEnhancedFeatures) {
+                predictionCard.innerHTML = `
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Enhanced AI Bloom Prediction</h6>
+                    </div>
+                    <div class="card-body">
                     <!-- Main Prediction -->
-                    <div class="row mb-3">
+                    <div class="row mb-4">
                         <div class="col-4">
-                            <h4 class="text-primary">${(prediction.predicted_intensity * 100).toFixed(1)}%</h4>
+                            <h3 class="text-primary mb-1">${(prediction.predicted_intensity * 100).toFixed(1)}%</h3>
                             <small class="text-muted">Predicted Intensity</small>
                         </div>
                         <div class="col-4">
-                            <h4 class="text-success">${(prediction.confidence * 100).toFixed(1)}%</h4>
+                            <h3 class="text-success mb-1">${(prediction.confidence * 100).toFixed(1)}%</h3>
                             <small class="text-muted">Confidence</small>
                         </div>
                         <div class="col-4">
-                            <h4 class="text-info">${prediction.days_ahead}</h4>
+                            <h3 class="text-info mb-1">${prediction.days_ahead}</h3>
                             <small class="text-muted">Days Ahead</small>
                         </div>
                     </div>
                     
-                    <!-- Uncertainty Range -->
-                    <div class="mb-3">
-                        <label class="form-label">Uncertainty Range:</label>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-warning" style="width: ${uncertainty.lower * 100}%"></div>
-                            <div class="progress-bar bg-primary" style="width: ${(uncertainty.upper - uncertainty.lower) * 100}%"></div>
-                        </div>
-                        <small class="text-muted">${(uncertainty.lower * 100).toFixed(1)}% - ${(uncertainty.upper * 100).toFixed(1)}%</small>
-                    </div>
                     
                     <!-- Model Details -->
-                    <div class="mb-3">
-                        <h6><i class="fas fa-cogs me-1"></i>Model Details</h6>
-                        <p><strong>Ensemble Method:</strong> ${prediction.model_used}</p>
-                        <div class="model-predictions">
-                            <small class="text-muted">Individual Model Predictions:</small>
-                            ${modelPredsHtml}
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-cogs me-2"></i>Model Details</h5>
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-secondary mb-3">Ensemble Models</h5>
+                                    <p class="mb-3 fs-6"><strong>Method:</strong> ${prediction.model_used}</p>
+                                    <div class="model-predictions">
+                                        <p class="text-muted mb-2 fs-6"><strong>Individual Model Predictions:</strong></p>
+                                        ${modelPredsHtml}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <div class="intensity-preview">
+                                        ${details.intensity_curve ? `
+                                        <h5 class="text-info mb-3"><i class="fas fa-chart-area me-2"></i>Seasonal Pattern</h5>
+                                        <canvas id="intensityChart" width="320" height="160"></canvas>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-12">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-success mb-3">Uncertainty</h5>
+                                    <p class="mb-2 fs-6"><strong>Range:</strong> ${(uncertainty.lower * 100).toFixed(1)}% - ${(uncertainty.upper * 100).toFixed(1)}%</p>
+                                    <p class="mb-2 fs-6"><strong>Std Dev:</strong> ${uncertainty.standard_deviation ? (uncertainty.standard_deviation * 100).toFixed(1) + '%' : 'N/A'}</p>
+                                    <div class="progress mb-0" style="height: 15px;">
+                                        <div class="progress-bar bg-warning" style="width: ${uncertainty.lower * 100}%"></div>
+                                        <div class="progress-bar bg-primary" style="width: ${(uncertainty.upper - uncertainty.lower) * 100}%"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Regional Analysis -->
-                    <div class="mb-3">
-                        <h6><i class="fas fa-globe me-1"></i>Regional Analysis</h6>
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-globe me-2"></i>Regional Analysis</h5>
                         <div class="row">
-                            <div class="col-6">
-                                <p><strong>Hemisphere:</strong> ${regional.hemisphere || 'Unknown'}</p>
-                                <p><strong>Latitude Zone:</strong> ${regional.latitude_zone || 'Unknown'}</p>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-primary mb-3">Location & Climate</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-2 small"><strong>Hemisphere:</strong> ${regional.hemisphere || 'Unknown'}</p>
+                                            <p class="mb-0 small"><strong>Latitude Zone:</strong> ${regional.latitude_zone || 'Unknown'}</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-2 small"><strong>Climate Type:</strong> ${climateChars.slice(0, 2).join(', ') || 'Unknown'}</p>
+                                            <p class="mb-0 small"><strong>Pattern:</strong> ${regional.seasonal_patterns?.pattern || 'Unknown'}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <p><strong>Climate:</strong> ${climateChars.slice(0, 2).join(', ') || 'Unknown'}</p>
-                                <p><strong>Vegetation:</strong> ${vegetationChars.slice(0, 2).join(', ') || 'Unknown'}</p>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-success mb-3">Vegetation & Factors</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-2 small"><strong>Vegetation Type:</strong> ${vegetationChars.slice(0, 2).join(', ') || 'Unknown'}</p>
+                                            <p class="mb-0 small"><strong>Peak Months:</strong> ${regional.seasonal_patterns?.peak_months || 'Unknown'}</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-0 small"><strong>Dominant Factors:</strong> ${dominantFactors.slice(0, 3).join(', ') || 'Unknown'}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted"><strong>Dominant Factors:</strong> ${dominantFactors.join(', ')}</small>
                         </div>
                     </div>
                     
                     <!-- Prediction Details -->
-                    <div class="mb-3">
-                        <h6><i class="fas fa-chart-line me-1"></i>Prediction Analysis</h6>
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-chart-line me-2"></i>Prediction Analysis</h5>
                         <div class="row">
-                            <div class="col-6">
-                                <p><strong>Seasonal Influence:</strong> ${details.seasonal_influence?.influence || 'Unknown'}</p>
-                                <p><strong>Trend:</strong> ${details.trend_analysis?.trend || 'Unknown'}</p>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-warning mb-3">Seasonal Analysis</h5>
+                                    <p class="mb-2 fs-6"><strong>Influence:</strong> ${details.seasonal_influence?.influence || 'Unknown'}</p>
+                                    <p class="mb-2 fs-6"><strong>Strength:</strong> ${details.seasonal_influence?.strength || 'Unknown'}</p>
+                                    <p class="mb-0 fs-6"><strong>Trend:</strong> ${details.trend_analysis?.trend || 'Unknown'}</p>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <p><strong>Peak Timing:</strong> ${details.peak_timing?.peak_month || 'Unknown'}</p>
-                                <p><strong>Next Peak:</strong> ${details.peak_timing?.next_peak || 'Unknown'}</p>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="border rounded p-4 h-100">
+                                    <h5 class="text-danger mb-3">Timing</h5>
+                                    <p class="mb-2 fs-6"><strong>Peak Month:</strong> ${details.peak_timing?.peak_month || 'Unknown'}</p>
+                                    <p class="mb-2 fs-6"><strong>Next Peak:</strong> ${details.peak_timing?.next_peak || 'Unknown'}</p>
+                                    <p class="mb-0 fs-6"><strong>Peak Intensity:</strong> ${details.intensity_curve ? (details.intensity_curve.peak_intensity * 100).toFixed(1) + '%' : 'Unknown'}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -748,28 +797,62 @@ class BloomWatchApp {
                     <!-- Risk Factors -->
                     ${risks.length > 0 ? `
                     <div class="mb-3">
-                        <h6><i class="fas fa-exclamation-triangle me-1"></i>Risk Assessment</h6>
-                        ${riskHtml}
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Intensity Curve Preview -->
-                    ${details.intensity_curve ? `
-                    <div class="mb-3">
-                        <h6><i class="fas fa-chart-area me-1"></i>Seasonal Intensity Pattern</h6>
-                        <div class="intensity-preview">
-                            <canvas id="intensityChart" width="300" height="100"></canvas>
+                        <h5 class="mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Risk Assessment</h5>
+                        <div class="row">
+                            ${risks.map(risk => `
+                            <div class="col-md-6 mb-2">
+                                <div class="alert alert-${risk.severity === 'high' ? 'danger' : risk.severity === 'medium' ? 'warning' : 'info'} alert-sm mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <strong>${risk.type.replace('_', ' ')}:</strong> ${risk.description}
+                                </div>
+                            </div>
+                            `).join('')}
                         </div>
                     </div>
                     ` : ''}
-                </div>
-            `;
+                    </div>
+                `;
+            } else {
+                // Fallback to simple display
+                predictionCard.innerHTML = `
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-brain me-2"></i>AI Bloom Prediction</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <h3 class="text-primary mb-1">${(prediction.predicted_intensity * 100).toFixed(1)}%</h3>
+                                <small class="text-muted">Predicted Intensity</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="text-success mb-1">${(prediction.confidence * 100).toFixed(1)}%</h3>
+                                <small class="text-muted">Confidence</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Model:</strong> ${prediction.model_used}</p>
+                                <p class="mb-0"><strong>Timeframe:</strong> ${prediction.days_ahead} days ahead</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-primary" style="width: ${prediction.predicted_intensity * 100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             predictionCard.style.display = 'block';
             
             // Draw intensity curve if available
             if (details.intensity_curve && details.intensity_curve.monthly_intensities) {
                 this.drawIntensityCurve(details.intensity_curve.monthly_intensities);
             }
+        } else {
+            console.error('Prediction card element not found!');
         }
     }
     

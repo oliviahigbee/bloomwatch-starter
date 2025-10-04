@@ -1153,7 +1153,7 @@ def get_3d_globe_data():
 def simulate_nasa_data(lat, lon, start_date, end_date):
     """Simulate NASA satellite data retrieval - ultra fast with location-specific patterns"""
     # Minimal data points for instant loading
-    dates = pd.date_range(start=start_date, end=end_date, freq='90D')  # Quarterly data only
+    dates = pd.date_range(start=start_date, end=end_date, freq='30D')  # Monthly data for better training
     
     # Location-specific base intensity based on latitude and longitude
     # Higher latitudes (colder) have lower base intensity, tropical regions have higher
