@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BloomWatch - NASA Earth Observation Plant Bloom Monitor</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI-powered global plant bloom monitoring using NASA satellite data">
+    <meta name="theme-color" content="#28a745">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="BloomWatch">
+    <meta name="msapplication-TileColor" content="#28a745">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#28a745">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -188,6 +206,40 @@
                             <div class="col-md-3">
                                 <button class="btn btn-dark w-100" onclick="view3DGlobe()">
                                     <i class="fas fa-globe me-2"></i>3D Globe
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Export & Sharing Row -->
+                        <div class="row mt-3">
+                            <div class="col-md-2">
+                                <button class="btn btn-success w-100" onclick="app.exportData('json')">
+                                    <i class="fas fa-download me-2"></i>Export JSON
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-info w-100" onclick="app.exportData('csv')">
+                                    <i class="fas fa-file-csv me-2"></i>Export CSV
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-warning w-100" onclick="app.exportData('geojson')">
+                                    <i class="fas fa-map me-2"></i>Export GeoJSON
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="app.shareData('link')">
+                                    <i class="fas fa-share me-2"></i>Share Link
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-secondary w-100" onclick="toggleRealTimeUpdates()">
+                                    <i class="fas fa-sync-alt me-2" id="realTimeIcon"></i><span id="realTimeText">Real-time ON</span>
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-dark w-100" onclick="showAdvancedAnalytics()">
+                                    <i class="fas fa-chart-pie me-2"></i>Analytics
                                 </button>
                             </div>
                         </div>
@@ -382,6 +434,138 @@
         </div>
     </div>
 
+    <!-- Advanced Analytics Modal -->
+    <div class="modal fade" id="analyticsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-chart-pie me-2"></i>Advanced Analytics Dashboard
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-database me-2"></i>Data Quality Metrics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="dataQualityMetrics">
+                                        <div class="metric-item mb-2">
+                                            <span>Completeness: </span>
+                                            <span class="fw-bold" id="dataCompleteness">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Accuracy: </span>
+                                            <span class="fw-bold" id="dataAccuracy">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Timeliness: </span>
+                                            <span class="fw-bold" id="dataTimeliness">-</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span>Coverage: </span>
+                                            <span class="fw-bold" id="dataCoverage">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-brain me-2"></i>AI Model Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="modelPerformance">
+                                        <div class="metric-item mb-2">
+                                            <span>Prediction Accuracy: </span>
+                                            <span class="fw-bold" id="predictionAccuracy">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Model Confidence: </span>
+                                            <span class="fw-bold" id="modelConfidence">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Training Data Points: </span>
+                                            <span class="fw-bold" id="trainingDataPoints">-</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span>Last Updated: </span>
+                                            <span class="fw-bold" id="lastModelUpdate">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>User Engagement</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="userEngagement">
+                                        <div class="metric-item mb-2">
+                                            <span>Session Duration: </span>
+                                            <span class="fw-bold" id="sessionDuration">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Interactions: </span>
+                                            <span class="fw-bold" id="userInteractions">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Features Used: </span>
+                                            <span class="fw-bold" id="featuresUsed">-</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span>Data Exports: </span>
+                                            <span class="fw-bold" id="dataExports">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>System Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="systemPerformance">
+                                        <div class="metric-item mb-2">
+                                            <span>Page Load Time: </span>
+                                            <span class="fw-bold" id="pageLoadTime">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>Memory Usage: </span>
+                                            <span class="fw-bold" id="memoryUsage">-</span>
+                                        </div>
+                                        <div class="metric-item mb-2">
+                                            <span>API Response Time: </span>
+                                            <span class="fw-bold" id="apiResponseTime">-</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span>Cache Hit Rate: </span>
+                                            <span class="fw-bold" id="cacheHitRate">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="exportAnalytics()">Export Analytics</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 3D Globe Modal -->
     <div class="modal fade" id="globeModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl">
@@ -470,5 +654,44 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}?v=2.6"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button
+            const installButton = document.createElement('button');
+            installButton.className = 'btn btn-success position-fixed';
+            installButton.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999;';
+            installButton.innerHTML = '<i class="fas fa-download me-2"></i>Install App';
+            installButton.onclick = () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    installButton.remove();
+                });
+            };
+            document.body.appendChild(installButton);
+        });
+    </script>
 </body>
 </html>
