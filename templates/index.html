@@ -32,11 +32,11 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold text-white mb-4">
-                        Monitor Plant Blooms Across the Globe
+                        AI-Powered Plant Bloom Monitoring
                     </h1>
                     <p class="lead text-white mb-4">
-                        Harness NASA's powerful satellite data to track vegetation bloom events, 
-                        analyze temporal trends, and support conservation efforts worldwide.
+                        Harness NASA's satellite data with cutting-edge AI to predict bloom events, 
+                        detect anomalies, analyze climate correlations, and support global conservation efforts.
                     </p>
                     <div class="d-flex gap-3">
                         <button class="btn btn-light btn-lg" onclick="scrollToMap()">
@@ -50,22 +50,28 @@
                 <div class="col-lg-6">
                     <div class="hero-stats">
                         <div class="row text-center">
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">50+</h3>
-                                    <p class="text-white-50">Years of Data</p>
+                                    <h3 class="text-white">AI</h3>
+                                    <p class="text-white-50">Predictions</p>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">Global</h3>
-                                    <p class="text-white-50">Coverage</p>
+                                    <h3 class="text-white">3D</h3>
+                                    <p class="text-white-50">Visualization</p>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">Real-time</h3>
-                                    <p class="text-white-50">Updates</p>
+                                    <h3 class="text-white">Citizen</h3>
+                                    <p class="text-white-50">Science</p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <h3 class="text-white">NASA</h3>
+                                    <p class="text-white-50">Data</p>
                                 </div>
                             </div>
                         </div>
@@ -130,6 +136,30 @@
                                         <i class="fas fa-sync-alt me-2"></i>Refresh Data
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI & Advanced Features Row -->
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="predictBloom()">
+                                    <i class="fas fa-brain me-2"></i>AI Prediction
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-warning w-100" onclick="detectAnomalies()">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Detect Anomalies
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-info w-100" onclick="analyzeClimate()">
+                                    <i class="fas fa-thermometer-half me-2"></i>Climate Analysis
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-dark w-100" onclick="view3DGlobe()">
+                                    <i class="fas fa-globe me-2"></i>3D Globe
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -218,6 +248,39 @@
             </div>
         </div>
         
+        <!-- AI & Advanced Analytics -->
+        <div class="row mb-4">
+            <div class="col-lg-4">
+                <div class="card shadow" id="predictionCard" style="display: none;">
+                    <!-- AI Prediction content will be loaded here -->
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow" id="anomaliesCard" style="display: none;">
+                    <!-- Anomaly detection content will be loaded here -->
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow" id="climateCard" style="display: none;">
+                    <!-- Climate correlation content will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Citizen Science & 3D Visualization -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow" id="citizenCard" style="display: none;">
+                    <!-- Citizen science content will be loaded here -->
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow" id="globeCard" style="display: none;">
+                    <!-- 3D Globe content will be loaded here -->
+                </div>
+            </div>
+        </div>
+
         <!-- Conservation Insights -->
         <div class="row">
             <div class="col-12">

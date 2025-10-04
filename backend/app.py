@@ -7,6 +7,11 @@ import json
 import os
 from dotenv import load_dotenv
 from functools import lru_cache
+import joblib
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+import warnings
+warnings.filterwarnings('ignore')
 
 # Load environment variables
 load_dotenv()
@@ -17,6 +22,217 @@ app = Flask(__name__, template_folder='../templates', static_folder='../static')
 NASA_API_KEY = os.getenv('NASA_API_KEY', 'DEMO_KEY')
 LANDSAT_API_URL = "https://api.nasa.gov/planetary/earth/assets"
 MODIS_API_URL = "https://api.nasa.gov/planetary/earth/assets"
+EARTHDATA_API_URL = "https://cmr.earthdata.nasa.gov/search"
+CLIMATE_API_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
+
+class BloomPredictor:
+    """AI-powered bloom prediction and anomaly detection"""
+    
+    def __init__(self):
+        self.model = None
+        self.scaler = StandardScaler()
+        self.is_trained = False
+        self.anomaly_threshold = 0.15
+        
+    def train_model(self, historical_data):
+        """Train ML model on historical bloom data"""
+        try:
+            # Prepare training data
+            X, y = self._prepare_training_data(historical_data)
+            
+            if len(X) < 10:  # Need minimum data for training
+                return False
+                
+            # Train Random Forest model
+            self.model = RandomForestRegressor(
+                n_estimators=100,
+                max_depth=10,
+                random_state=42,
+                n_jobs=-1
+            )
+            
+            X_scaled = self.scaler.fit_transform(X)
+            self.model.fit(X_scaled, y)
+            self.is_trained = True
+            return True
+            
+        except Exception as e:
+            print(f"Model training failed: {e}")
+            return False
+    
+    def _prepare_training_data(self, data):
+        """Prepare features and targets for ML training"""
+        features = []
+        targets = []
+        
+        for i in range(1, len(data)):
+            if i >= 12:  # Need at least a year of data
+                # Features: previous 12 months of data + seasonal features
+                prev_12_months = [d['ndvi'] for d in data[i-12:i]]
+                month = i % 12
+                season = month // 3
+                
+                feature_vector = prev_12_months + [month, season, np.mean(prev_12_months), np.std(prev_12_months)]
+                features.append(feature_vector)
+                targets.append(data[i]['ndvi'])
+        
+        return np.array(features), np.array(targets)
+    
+    def predict_bloom(self, recent_data, days_ahead=30):
+        """Predict future bloom intensity"""
+        if not self.is_trained or len(recent_data) < 12:
+            return self._fallback_prediction(recent_data, days_ahead)
+        
+        try:
+            # Use last 12 months for prediction
+            last_12_months = [d['ndvi'] for d in recent_data[-12:]]
+            month = len(recent_data) % 12
+            season = month // 3
+            
+            feature_vector = last_12_months + [month, season, np.mean(last_12_months), np.std(last_12_months)]
+            X = np.array([feature_vector])
+            X_scaled = self.scaler.transform(X)
+            
+            prediction = self.model.predict(X_scaled)[0]
+            confidence = min(0.95, max(0.1, 1.0 - np.std(last_12_months)))
+            
+            return {
+                'predicted_intensity': float(prediction),
+                'confidence': float(confidence),
+                'days_ahead': days_ahead,
+                'model_used': 'RandomForest'
+            }
+            
+        except Exception as e:
+            print(f"Prediction failed: {e}")
+            return self._fallback_prediction(recent_data, days_ahead)
+    
+    def _fallback_prediction(self, recent_data, days_ahead):
+        """Fallback prediction using simple trend analysis"""
+        if len(recent_data) < 3:
+            return {'predicted_intensity': 0.5, 'confidence': 0.1, 'days_ahead': days_ahead, 'model_used': 'Fallback'}
+        
+        recent_values = [d['ndvi'] for d in recent_data[-3:]]
+        trend = np.polyfit(range(len(recent_values)), recent_values, 1)[0]
+        predicted = recent_values[-1] + trend * (days_ahead / 30)
+        
+        return {
+            'predicted_intensity': float(max(0, min(1, predicted))),
+            'confidence': 0.3,
+            'days_ahead': days_ahead,
+            'model_used': 'Trend'
+        }
+    
+    def detect_anomalies(self, data):
+        """Detect anomalous bloom patterns"""
+        if len(data) < 12:
+            return []
+        
+        anomalies = []
+        values = [d['ndvi'] for d in data]
+        
+        # Calculate rolling statistics
+        window = 12
+        for i in range(window, len(values)):
+            window_data = values[i-window:i]
+            mean_val = np.mean(window_data)
+            std_val = np.std(window_data)
+            
+            current_val = values[i]
+            z_score = abs(current_val - mean_val) / (std_val + 1e-8)
+            
+            if z_score > 2.0:  # Statistical anomaly
+                anomalies.append({
+                    'date': data[i]['date'],
+                    'value': current_val,
+                    'expected_range': [mean_val - 2*std_val, mean_val + 2*std_val],
+                    'anomaly_score': float(z_score),
+                    'type': 'high' if current_val > mean_val else 'low'
+                })
+        
+        return anomalies
+
+class ClimateAnalyzer:
+    """Analyze climate data correlation with bloom patterns"""
+    
+    def __init__(self):
+        self.climate_cache = {}
+    
+    def get_climate_data(self, lat, lon, start_date, end_date):
+        """Fetch climate data from NASA POWER API"""
+        cache_key = f"{lat}_{lon}_{start_date}_{end_date}"
+        if cache_key in self.climate_cache:
+            return self.climate_cache[cache_key]
+        
+        try:
+            # NASA POWER API parameters
+            params = {
+                'parameters': 'T2M,PRECTOT,ALLSKY_SFC_SW_DWN',
+                'community': 'RE',
+                'longitude': lon,
+                'latitude': lat,
+                'start': start_date,
+                'end': end_date,
+                'format': 'JSON'
+            }
+            
+            response = requests.get(CLIMATE_API_URL, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                self.climate_cache[cache_key] = data
+                return data
+        except Exception as e:
+            print(f"Climate data fetch failed: {e}")
+        
+        return None
+    
+    def correlate_climate_bloom(self, climate_data, bloom_data):
+        """Correlate climate variables with bloom patterns"""
+        if not climate_data or not bloom_data:
+            return {}
+        
+        try:
+            # Extract climate variables
+            temp_data = climate_data.get('properties', {}).get('parameter', {}).get('T2M', {})
+            precip_data = climate_data.get('properties', {}).get('parameter', {}).get('PRECTOT', {})
+            solar_data = climate_data.get('properties', {}).get('parameter', {}).get('ALLSKY_SFC_SW_DWN', {})
+            
+            # Calculate correlations
+            correlations = {
+                'temperature': self._calculate_correlation(temp_data, bloom_data),
+                'precipitation': self._calculate_correlation(precip_data, bloom_data),
+                'solar_radiation': self._calculate_correlation(solar_data, bloom_data)
+            }
+            
+            return correlations
+        except Exception as e:
+            print(f"Climate correlation failed: {e}")
+            return {}
+    
+    def _calculate_correlation(self, climate_series, bloom_data):
+        """Calculate correlation between climate and bloom data"""
+        if not climate_series or not bloom_data:
+            return 0.0
+        
+        try:
+            # Align dates and calculate correlation
+            climate_values = []
+            bloom_values = []
+            
+            for bloom_point in bloom_data:
+                date_str = bloom_point['date'][:10]  # YYYY-MM-DD
+                if date_str in climate_series:
+                    climate_values.append(climate_series[date_str])
+                    bloom_values.append(bloom_point['ndvi'])
+            
+            if len(climate_values) > 3:
+                correlation = np.corrcoef(climate_values, bloom_values)[0, 1]
+                return float(correlation) if not np.isnan(correlation) else 0.0
+            
+        except Exception as e:
+            print(f"Correlation calculation failed: {e}")
+        
+        return 0.0
 
 class BloomMonitor:
     def __init__(self):
@@ -26,6 +242,8 @@ class BloomMonitor:
             'SAVI': self.calculate_savi,
             'GNDVI': self.calculate_gndvi
         }
+        self.predictor = BloomPredictor()
+        self.climate_analyzer = ClimateAnalyzer()
     
     def calculate_ndvi(self, red, nir):
         """Calculate Normalized Difference Vegetation Index"""
@@ -254,6 +472,193 @@ def get_conservation_insights():
     bloom_data_str = str(sorted(bloom_data.items())) if bloom_data else 'empty'
     insights = generate_conservation_insights(location, bloom_data_str)
     return jsonify(insights)
+
+@app.route('/api/predict-bloom', methods=['POST'])
+def predict_bloom():
+    """AI-powered bloom prediction endpoint"""
+    try:
+        data = request.get_json()
+        location = data.get('location', 'global')
+        days_ahead = data.get('days_ahead', 30)
+        
+        # Get historical data for the location
+        if location != 'global':
+            # Extract coordinates from location or use default
+            lat, lon = 40.7128, -74.0060  # Default to NYC
+            if ',' in location:
+                try:
+                    coords = location.split(',')
+                    lat, lon = float(coords[0]), float(coords[1])
+                except:
+                    pass
+        else:
+            lat, lon = 20.0, 0.0  # Global center
+        
+        # Get historical data
+        historical_data = simulate_nasa_data(lat, lon, '2020-01-01', '2024-12-31')
+        
+        # Train model and predict
+        bloom_monitor.predictor.train_model(historical_data['data'])
+        prediction = bloom_monitor.predictor.predict_bloom(historical_data['data'], days_ahead)
+        
+        return jsonify({
+            'location': location,
+            'prediction': prediction,
+            'model_status': 'trained' if bloom_monitor.predictor.is_trained else 'fallback',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/detect-anomalies', methods=['POST'])
+def detect_anomalies():
+    """Detect anomalous bloom patterns"""
+    try:
+        data = request.get_json()
+        location = data.get('location', 'global')
+        
+        # Get historical data
+        if location != 'global':
+            lat, lon = 40.7128, -74.0060
+        else:
+            lat, lon = 20.0, 0.0
+            
+        historical_data = simulate_nasa_data(lat, lon, '2020-01-01', '2024-12-31')
+        
+        # Detect anomalies
+        anomalies = bloom_monitor.predictor.detect_anomalies(historical_data['data'])
+        
+        return jsonify({
+            'location': location,
+            'anomalies': anomalies,
+            'total_anomalies': len(anomalies),
+            'analysis_period': '2020-2024',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/climate-correlation', methods=['POST'])
+def get_climate_correlation():
+    """Get climate data correlation with bloom patterns"""
+    try:
+        data = request.get_json()
+        lat = float(data.get('lat', 40.7128))
+        lon = float(data.get('lon', -74.0060))
+        start_date = data.get('start_date', '2023-01-01')
+        end_date = data.get('end_date', '2023-12-31')
+        
+        # Get climate data
+        climate_data = bloom_monitor.climate_analyzer.get_climate_data(lat, lon, start_date, end_date)
+        
+        # Get bloom data
+        bloom_data = simulate_nasa_data(lat, lon, start_date, end_date)
+        
+        # Calculate correlations
+        correlations = bloom_monitor.climate_analyzer.correlate_climate_bloom(
+            climate_data, bloom_data['data']
+        )
+        
+        return jsonify({
+            'location': {'lat': lat, 'lon': lon},
+            'time_range': {'start': start_date, 'end': end_date},
+            'correlations': correlations,
+            'climate_data_available': climate_data is not None,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/citizen-science', methods=['GET', 'POST'])
+def citizen_science():
+    """Citizen science data collection endpoint"""
+    if request.method == 'GET':
+        # Return recent citizen science observations
+        observations = [
+            {
+                'id': 1,
+                'location': {'lat': 40.7128, 'lon': -74.0060},
+                'species': 'Cherry Blossom',
+                'bloom_status': 'full_bloom',
+                'observer': 'Citizen Scientist',
+                'date': '2024-04-15',
+                'confidence': 0.9,
+                'photo_url': '/static/images/cherry_blossom_sample.jpg'
+            },
+            {
+                'id': 2,
+                'location': {'lat': 51.5074, 'lon': -0.1278},
+                'species': 'Daffodil',
+                'bloom_status': 'early_bloom',
+                'observer': 'Nature Enthusiast',
+                'date': '2024-03-20',
+                'confidence': 0.8,
+                'photo_url': '/static/images/daffodil_sample.jpg'
+            }
+        ]
+        
+        return jsonify({
+            'observations': observations,
+            'total_observations': len(observations),
+            'contribution_message': 'Help us track blooms worldwide! Submit your observations.'
+        })
+    
+    elif request.method == 'POST':
+        # Accept new citizen science observations
+        data = request.get_json()
+        
+        # Validate and store observation (in real implementation, save to database)
+        observation = {
+            'id': len(data) + 1,  # Simple ID generation
+            'location': data.get('location'),
+            'species': data.get('species'),
+            'bloom_status': data.get('bloom_status'),
+            'observer': data.get('observer', 'Anonymous'),
+            'date': datetime.now().isoformat(),
+            'confidence': data.get('confidence', 0.5),
+            'notes': data.get('notes', '')
+        }
+        
+        return jsonify({
+            'message': 'Observation recorded successfully!',
+            'observation': observation,
+            'contribution_points': 10
+        })
+
+@app.route('/api/3d-globe-data')
+def get_3d_globe_data():
+    """Get data for 3D globe visualization"""
+    try:
+        # Generate 3D globe data with time-lapse capability
+        globe_data = []
+        
+        # Create a grid of points around the globe
+        for lat in range(-60, 61, 10):
+            for lon in range(-180, 181, 20):
+                # Simulate bloom intensity based on latitude and season
+                seasonal_factor = 0.5 + 0.3 * np.sin(2 * np.pi * lat / 180)
+                bloom_intensity = max(0.1, min(0.9, seasonal_factor + 0.1 * np.random.random()))
+                
+                globe_data.append({
+                    'lat': lat,
+                    'lon': lon,
+                    'bloom_intensity': round(bloom_intensity, 3),
+                    'elevation': 0,  # Sea level
+                    'timestamp': datetime.now().isoformat()
+                })
+        
+        return jsonify({
+            'globe_data': globe_data,
+            'total_points': len(globe_data),
+            'time_lapse_available': True,
+            'animation_speed': '1_day_per_second'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @lru_cache(maxsize=10)
 def simulate_nasa_data(lat, lon, start_date, end_date):

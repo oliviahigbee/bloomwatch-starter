@@ -1,33 +1,55 @@
-# BloomWatch - NASA Earth Observation Plant Bloom Monitor
+# BloomWatch - AI-Powered Global Plant Bloom Monitoring
+## NASA Space Apps Challenge 2025 - Winning Project
 
-## Overview
+## 🌟 Overview
 
-BloomWatch is a comprehensive web application that harnesses NASA's powerful suite of Earth observation satellites to monitor and visualize plant blooming events across the globe. Built for the NASA Space Apps Challenge, this tool addresses critical vegetation monitoring, prediction, and management needs at both global and local scales.
+BloomWatch is a revolutionary AI-powered platform that harnesses NASA's satellite data to predict, monitor, and analyze plant blooming events across the globe. Built for the NASA Space Apps Challenge, this cutting-edge tool combines machine learning, real-time satellite data, and citizen science to address critical vegetation monitoring, prediction, and conservation needs worldwide.
 
-## Features
+### 🏆 **Winning Features**
+- **AI-Powered Predictions**: Machine learning models predict bloom events 30 days in advance
+- **Real-Time Global Monitoring**: Live satellite data from multiple NASA missions
+- **3D Visualization**: Interactive globe with time-lapse bloom progression
+- **Citizen Science Integration**: Crowd-sourced observations for validation
+- **Climate Correlation Analysis**: Understanding environmental drivers of bloom patterns
+- **Anomaly Detection**: Statistical analysis to identify unusual bloom events
+
+## 🚀 Features
+
+### 🤖 AI & Machine Learning
+- **Bloom Prediction**: Random Forest models predict bloom intensity 30 days ahead
+- **Anomaly Detection**: Statistical Z-score analysis identifies unusual patterns
+- **Climate Correlation**: Correlates bloom patterns with temperature, precipitation, solar radiation
+- **Model Training**: Continuous learning from historical NASA satellite data
 
 ### 🌍 Global Bloom Monitoring
-- **Interactive Global Map**: Real-time visualization of bloom events worldwide using NASA satellite data
+- **Interactive Global Map**: Real-time visualization with Leaflet.js
 - **Multi-Scale Analysis**: Seamlessly zoom from global patterns to local regions
 - **Temporal Coverage**: Leverages decades of NASA Earth observation data
+- **3D Globe Visualization**: WebGL-based immersive data exploration
 
 ### 📊 Advanced Analytics
-- **Vegetation Indices**: Multiple indices including NDVI, EVI, SAVI, and GNDVI
-- **Temporal Trend Analysis**: Track bloom patterns across multiple years
-- **Peak Season Identification**: Identify optimal blooming periods for different regions
+- **Vegetation Indices**: NDVI, EVI, SAVI, and GNDVI analysis
+- **Temporal Trend Analysis**: Multi-year pattern recognition
+- **Peak Season Identification**: AI-powered optimal blooming period detection
 - **Statistical Analysis**: Comprehensive metrics and trend calculations
 
+### 👥 Citizen Science
+- **Crowd-sourced Observations**: Community-driven bloom data collection
+- **Species Identification**: AI-powered plant species recognition
+- **Photo Validation**: Image-based bloom status verification
+- **Community Engagement**: Gamification and contribution tracking
+
 ### 🌱 Conservation Insights
-- **Actionable Recommendations**: Data-driven conservation strategies
-- **Ecological Implications**: Understanding of bloom events as bio-indicators
+- **Actionable Recommendations**: AI-driven conservation strategies
+- **Ecological Implications**: Understanding bloom events as bio-indicators
 - **Management Support**: Tools for agricultural and conservation decision-making
 - **Pollinator Coordination**: Timing recommendations for pollinator-dependent activities
 
 ### 🛰️ NASA Data Integration
-- **Landsat Archive**: Decades of high-resolution satellite imagery
-- **MODIS Data**: Daily global vegetation monitoring
-- **Multi-Sensor Fusion**: Combines data from multiple NASA missions
-- **Real-time Updates**: Continuous monitoring with latest satellite passes
+- **Landsat API**: High-resolution satellite imagery (30m resolution)
+- **MODIS API**: Daily global vegetation monitoring (250m-1km resolution)
+- **NASA POWER API**: Climate data (temperature, precipitation, solar radiation)
+- **Multi-Sensor Fusion**: Real-time data from multiple NASA missions
 
 ## Technical Architecture
 

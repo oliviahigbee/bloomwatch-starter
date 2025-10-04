@@ -10,6 +10,10 @@ class BloomWatchApp {
         this.currentTimeRange = 5;
         this.currentVegetationIndex = 'ndvi';
         this.cities = {};
+        this.predictions = null;
+        this.anomalies = [];
+        this.citizenObservations = [];
+        this.climateCorrelations = {};
         
         this.init();
     }
@@ -19,6 +23,7 @@ class BloomWatchApp {
         this.initializeChart();
         this.loadCities();
         this.loadInitialData();
+        this.loadCitizenObservations();
         this.setupEventListeners();
     }
     
@@ -169,6 +174,28 @@ class BloomWatchApp {
         
         window.refreshData = () => {
             this.loadDataForCurrentLocation();
+        };
+        
+        // AI Prediction functions
+        window.predictBloom = () => {
+            this.predictFutureBloom();
+        };
+        
+        window.detectAnomalies = () => {
+            this.detectBloomAnomalies();
+        };
+        
+        window.analyzeClimate = () => {
+            this.analyzeClimateCorrelation();
+        };
+        
+        // Citizen Science functions
+        window.submitObservation = () => {
+            this.submitCitizenObservation();
+        };
+        
+        window.view3DGlobe = () => {
+            this.show3DGlobe();
         };
     }
     
@@ -574,6 +601,331 @@ class BloomWatchApp {
         bsToast.show();
         
         // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            document.body.removeChild(toast);
+        });
+    }
+    
+    // AI Prediction Methods
+    async predictFutureBloom() {
+        try {
+            this.showLoading();
+            
+            const response = await fetch('/api/predict-bloom', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    location: this.currentLocation,
+                    days_ahead: 30
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.predictions = data.prediction;
+                this.displayPrediction(data);
+                this.showSuccess('Bloom prediction generated successfully!');
+            } else {
+                throw new Error('Failed to generate prediction');
+            }
+        } catch (error) {
+            console.error('Prediction error:', error);
+            this.showError('Failed to generate bloom prediction');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    displayPrediction(predictionData) {
+        const prediction = predictionData.prediction;
+        const predictionCard = document.getElementById('predictionCard');
+        
+        if (predictionCard) {
+            predictionCard.innerHTML = `
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-brain me-2"></i>AI Bloom Prediction</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h4 class="text-primary">${(prediction.predicted_intensity * 100).toFixed(1)}%</h4>
+                            <small class="text-muted">Predicted Intensity</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">${(prediction.confidence * 100).toFixed(1)}%</h4>
+                            <small class="text-muted">Confidence</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>Model:</strong> ${prediction.model_used}</p>
+                    <p><strong>Timeframe:</strong> ${prediction.days_ahead} days ahead</p>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: ${prediction.predicted_intensity * 100}%"></div>
+                    </div>
+                </div>
+            `;
+            predictionCard.style.display = 'block';
+        }
+    }
+    
+    async detectBloomAnomalies() {
+        try {
+            this.showLoading();
+            
+            const response = await fetch('/api/detect-anomalies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    location: this.currentLocation
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.anomalies = data.anomalies;
+                this.displayAnomalies(data);
+                this.showSuccess(`Found ${data.total_anomalies} bloom anomalies!`);
+            } else {
+                throw new Error('Failed to detect anomalies');
+            }
+        } catch (error) {
+            console.error('Anomaly detection error:', error);
+            this.showError('Failed to detect bloom anomalies');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    displayAnomalies(anomalyData) {
+        const anomaliesCard = document.getElementById('anomaliesCard');
+        
+        if (anomaliesCard && anomalyData.anomalies.length > 0) {
+            const anomaliesList = anomalyData.anomalies.map(anomaly => `
+                <div class="anomaly-item mb-2 p-2 border rounded">
+                    <div class="d-flex justify-content-between">
+                        <span><strong>${new Date(anomaly.date).toLocaleDateString()}</strong></span>
+                        <span class="badge bg-${anomaly.type === 'high' ? 'danger' : 'warning'}">${anomaly.type}</span>
+                    </div>
+                    <small class="text-muted">Value: ${anomaly.value.toFixed(3)} | Score: ${anomaly.anomaly_score.toFixed(2)}</small>
+                </div>
+            `).join('');
+            
+            anomaliesCard.innerHTML = `
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Bloom Anomalies Detected</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Found <strong>${anomalyData.total_anomalies}</strong> anomalies in ${anomalyData.analysis_period}</p>
+                    <div class="anomalies-list" style="max-height: 300px; overflow-y: auto;">
+                        ${anomaliesList}
+                    </div>
+                </div>
+            `;
+            anomaliesCard.style.display = 'block';
+        }
+    }
+    
+    async analyzeClimateCorrelation() {
+        try {
+            this.showLoading();
+            
+            // Get current city coordinates
+            let lat = 40.7128, lon = -74.0060; // Default to NYC
+            if (this.currentCity !== 'global' && this.cities[this.currentCity]) {
+                const city = this.cities[this.currentCity];
+                lat = city.lat;
+                lon = city.lon;
+            }
+            
+            const response = await fetch('/api/climate-correlation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    lat: lat,
+                    lon: lon,
+                    start_date: '2023-01-01',
+                    end_date: '2023-12-31'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.climateCorrelations = data.correlations;
+                this.displayClimateCorrelation(data);
+                this.showSuccess('Climate correlation analysis completed!');
+            } else {
+                throw new Error('Failed to analyze climate correlation');
+            }
+        } catch (error) {
+            console.error('Climate analysis error:', error);
+            this.showError('Failed to analyze climate correlation');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    displayClimateCorrelation(climateData) {
+        const climateCard = document.getElementById('climateCard');
+        
+        if (climateCard) {
+            const correlations = climateData.correlations;
+            const correlationItems = Object.entries(correlations).map(([key, value]) => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-capitalize">${key.replace('_', ' ')}</span>
+                    <span class="badge bg-${Math.abs(value) > 0.5 ? 'primary' : 'secondary'}">
+                        ${value.toFixed(3)}
+                    </span>
+                </div>
+            `).join('');
+            
+            climateCard.innerHTML = `
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-thermometer-half me-2"></i>Climate Correlation</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Bloom pattern correlation with climate variables:</p>
+                    ${correlationItems}
+                    <hr>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Values closer to ±1.0 indicate stronger correlation
+                    </small>
+                </div>
+            `;
+            climateCard.style.display = 'block';
+        }
+    }
+    
+    // Citizen Science Methods
+    async loadCitizenObservations() {
+        try {
+            const response = await fetch('/api/citizen-science');
+            if (response.ok) {
+                const data = await response.json();
+                this.citizenObservations = data.observations;
+                this.displayCitizenObservations(data);
+            }
+        } catch (error) {
+            console.error('Failed to load citizen observations:', error);
+        }
+    }
+    
+    displayCitizenObservations(data) {
+        const citizenCard = document.getElementById('citizenCard');
+        
+        if (citizenCard && data.observations.length > 0) {
+            const observationsList = data.observations.map(obs => `
+                <div class="observation-item mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${obs.species}</h6>
+                            <p class="mb-1 text-muted">${obs.bloom_status.replace('_', ' ')}</p>
+                            <small class="text-muted">by ${obs.observer} on ${new Date(obs.date).toLocaleDateString()}</small>
+                        </div>
+                        <span class="badge bg-success">${(obs.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            citizenCard.innerHTML = `
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Citizen Science Observations</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">${data.contribution_message}</p>
+                    <div class="observations-list" style="max-height: 400px; overflow-y: auto;">
+                        ${observationsList}
+                    </div>
+                    <button class="btn btn-outline-success btn-sm mt-3" onclick="showObservationForm()">
+                        <i class="fas fa-plus me-1"></i>Submit Observation
+                    </button>
+                </div>
+            `;
+            citizenCard.style.display = 'block';
+        }
+    }
+    
+    async submitCitizenObservation() {
+        // This would open a form modal in a real implementation
+        this.showSuccess('Citizen science observation form would open here!');
+    }
+    
+    async show3DGlobe() {
+        try {
+            this.showLoading();
+            
+            const response = await fetch('/api/3d-globe-data');
+            if (response.ok) {
+                const data = await response.json();
+                this.display3DGlobeInfo(data);
+                this.showSuccess('3D Globe data loaded! (3D visualization would open here)');
+            }
+        } catch (error) {
+            console.error('Failed to load 3D globe data:', error);
+            this.showError('Failed to load 3D globe data');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    display3DGlobeInfo(data) {
+        const globeCard = document.getElementById('globeCard');
+        
+        if (globeCard) {
+            globeCard.innerHTML = `
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-globe me-2"></i>3D Globe Visualization</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Interactive 3D Earth with bloom data visualization</p>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary">${data.total_points}</h4>
+                            <small class="text-muted">Data Points</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success">${data.time_lapse_available ? 'Yes' : 'No'}</h4>
+                            <small class="text-muted">Time-lapse</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-info">${data.animation_speed}</h4>
+                            <small class="text-muted">Speed</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Full 3D WebGL visualization would be implemented here with Three.js
+                    </p>
+                </div>
+            `;
+            globeCard.style.display = 'block';
+        }
+    }
+    
+    showSuccess(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
         toast.addEventListener('hidden.bs.toast', () => {
             document.body.removeChild(toast);
         });
