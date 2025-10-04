@@ -10,6 +10,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Ensure OrbitControls is available
+        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+            // Fallback: create a simple orbit control if the import failed
+            THREE.OrbitControls = function(camera, domElement) {
+                this.camera = camera;
+                this.domElement = domElement;
+                this.enableDamping = true;
+                this.dampingFactor = 0.05;
+                this.enableZoom = true;
+                this.enablePan = false;
+                this.minDistance = 1.5;
+                this.maxDistance = 5;
+                
+                this.update = function() {
+                    // Simple rotation
+                    this.camera.position.x = Math.cos(Date.now() * 0.0005) * 3;
+                    this.camera.position.z = Math.sin(Date.now() * 0.0005) * 3;
+                    this.camera.lookAt(0, 0, 0);
+                };
+                
+                this.reset = function() {
+                    this.camera.position.set(0, 0, 3);
+                };
+            };
+        }
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -339,6 +368,47 @@
                     </div>
                     <h5>Analyzing NASA Data...</h5>
                     <p class="text-muted">Processing satellite imagery and vegetation indices</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Globe Modal -->
+    <div class="modal fade" id="globeModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-globe me-2"></i>3D Globe Visualization
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="globeContainer" style="height: 600px; position: relative;">
+                        <div id="globeControls" class="position-absolute top-0 end-0 p-3" style="z-index: 1000;">
+                            <div class="btn-group-vertical" role="group">
+                                <button type="button" class="btn btn-outline-light btn-sm mb-1" onclick="globeApp.resetView()">
+                                    <i class="fas fa-home"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm mb-1" onclick="globeApp.toggleAnimation()">
+                                    <i class="fas fa-play" id="animationIcon"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm mb-1" onclick="globeApp.toggleBloomData()">
+                                    <i class="fas fa-seedling" id="bloomIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="globeInfo" class="position-absolute bottom-0 start-0 p-3 text-white" style="z-index: 1000; background: rgba(0,0,0,0.7); border-radius: 0 10px 0 0;">
+                            <small>
+                                <div>Data Points: <span id="globeDataCount">0</span></div>
+                                <div>Animation: <span id="globeAnimationStatus">Paused</span></div>
+                                <div>Bloom Data: <span id="globeBloomStatus">Hidden</span></div>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

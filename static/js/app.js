@@ -863,8 +863,21 @@ class BloomWatchApp {
             const response = await fetch('/api/3d-globe-data');
             if (response.ok) {
                 const data = await response.json();
-                this.display3DGlobeInfo(data);
-                this.showSuccess('3D Globe data loaded! (3D visualization would open here)');
+                
+                // Show the 3D globe modal
+                const modal = new bootstrap.Modal(document.getElementById('globeModal'));
+                modal.show();
+                
+                // Initialize the 3D globe after modal is shown
+                setTimeout(() => {
+                    if (!window.globeApp) {
+                        window.globeApp = new Globe3D('globeContainer', data);
+                    } else {
+                        window.globeApp.updateData(data);
+                    }
+                }, 300);
+                
+                this.showSuccess('3D Globe visualization loaded!');
             }
         } catch (error) {
             console.error('Failed to load 3D globe data:', error);
@@ -971,3 +984,319 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(card);
     });
 });
+
+// 3D Globe Visualization Class
+class Globe3D {
+    constructor(containerId, data) {
+        this.container = document.getElementById(containerId);
+        this.data = data;
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.globe = null;
+        this.bloomPoints = [];
+        this.animationId = null;
+        this.isAnimating = false;
+        this.showBloomData = false;
+        
+        this.init();
+    }
+    
+    init() {
+        // Create scene
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x000011);
+        
+        // Create camera
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+        this.camera.position.set(0, 0, 3);
+        
+        // Create renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(width, height);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.container.appendChild(this.renderer.domElement);
+        
+        // Add controls
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.enableZoom = true;
+        this.controls.enablePan = false;
+        this.controls.minDistance = 1.5;
+        this.controls.maxDistance = 5;
+        
+        // Create globe
+        this.createGlobe();
+        
+        // Add lighting
+        this.addLighting();
+        
+        // Add bloom data points
+        this.addBloomData();
+        
+        // Start render loop
+        this.animate();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => this.onWindowResize());
+        
+        // Update info display
+        this.updateInfo();
+    }
+    
+    createGlobe() {
+        // Create Earth geometry
+        const geometry = new THREE.SphereGeometry(1, 64, 64);
+        
+        // Load world map texture with fallback
+        const textureLoader = new THREE.TextureLoader();
+        const worldTexture = textureLoader.load(
+            'https://unpkg.com/three-globe@2.32.0/example/img/earth-blue-marble.jpg',
+            // Success callback
+            (texture) => {
+                console.log('World map texture loaded successfully');
+            },
+            // Progress callback
+            undefined,
+            // Error callback - use fallback
+            (error) => {
+                console.warn('Failed to load world map texture, using fallback:', error);
+                // Create a simple procedural texture as fallback
+                this.createFallbackTexture();
+            }
+        );
+        
+        // Create Earth material with world map texture
+        const material = new THREE.MeshPhongMaterial({
+            map: worldTexture,
+            transparent: false,
+            shininess: 100
+        });
+        
+        this.globe = new THREE.Mesh(geometry, material);
+        this.globe.castShadow = true;
+        this.globe.receiveShadow = true;
+        this.scene.add(this.globe);
+        
+        // Add atmosphere
+        const atmosphereGeometry = new THREE.SphereGeometry(1.05, 32, 32);
+        const atmosphereMaterial = new THREE.MeshPhongMaterial({
+            color: 0x87ceeb,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.BackSide
+        });
+        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        this.scene.add(atmosphere);
+    }
+    
+    createFallbackTexture() {
+        // Create a simple procedural texture as fallback
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        
+        // Create a simple world-like pattern
+        const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+        gradient.addColorStop(0, '#1e3a8a'); // Dark blue (ocean)
+        gradient.addColorStop(0.3, '#3b82f6'); // Blue (ocean)
+        gradient.addColorStop(0.7, '#10b981'); // Green (land)
+        gradient.addColorStop(1, '#059669'); // Dark green (land)
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1024, 512);
+        
+        // Add some simple landmass shapes
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath();
+        ctx.ellipse(200, 200, 80, 60, 0, 0, 2 * Math.PI); // North America
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(300, 300, 60, 40, 0, 0, 2 * Math.PI); // South America
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(500, 150, 70, 50, 0, 0, 2 * Math.PI); // Europe/Africa
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(800, 200, 60, 45, 0, 0, 2 * Math.PI); // Asia
+        ctx.fill();
+        
+        const fallbackTexture = new THREE.CanvasTexture(canvas);
+        if (this.globe && this.globe.material) {
+            this.globe.material.map = fallbackTexture;
+            this.globe.material.needsUpdate = true;
+        }
+    }
+    
+    addLighting() {
+        // Ambient light - increased for better texture visibility
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        this.scene.add(ambientLight);
+        
+        // Directional light (sun) - positioned to illuminate the globe nicely
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        directionalLight.position.set(3, 2, 3);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        this.scene.add(directionalLight);
+        
+        // Additional fill light for better texture visibility
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        fillLight.position.set(-2, 1, -2);
+        this.scene.add(fillLight);
+        
+        // Point light for bloom points
+        const pointLight = new THREE.PointLight(0x28a745, 0.5, 10);
+        pointLight.position.set(0, 0, 0);
+        this.scene.add(pointLight);
+    }
+    
+    addBloomData() {
+        if (!this.data || !this.data.globe_data) return;
+        
+        // Clear existing bloom points
+        this.bloomPoints.forEach(point => {
+            this.scene.remove(point);
+        });
+        this.bloomPoints = [];
+        
+        // Add bloom data points
+        this.data.globe_data.forEach(point => {
+            const bloomPoint = this.createBloomPoint(point);
+            this.bloomPoints.push(bloomPoint);
+            this.scene.add(bloomPoint);
+        });
+    }
+    
+    createBloomPoint(point) {
+        // Convert lat/lon to 3D coordinates
+        const lat = point.lat * Math.PI / 180;
+        const lon = point.lon * Math.PI / 180;
+        const radius = 1.02; // Slightly above the globe surface
+        
+        const x = radius * Math.cos(lat) * Math.cos(lon);
+        const y = radius * Math.sin(lat);
+        const z = radius * Math.cos(lat) * Math.sin(lon);
+        
+        // Create point geometry
+        const geometry = new THREE.SphereGeometry(0.01, 8, 8);
+        
+        // Color based on bloom intensity
+        const intensity = point.bloom_intensity;
+        let color = 0x28a745; // Green
+        if (intensity > 0.6) color = 0x28a745; // High - Green
+        else if (intensity > 0.4) color = 0xffc107; // Medium - Yellow
+        else if (intensity > 0.2) color = 0xfd7e14; // Low - Orange
+        else color = 0xdc3545; // Very Low - Red
+        
+        const material = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: this.showBloomData ? 0.8 : 0
+        });
+        
+        const bloomPoint = new THREE.Mesh(geometry, material);
+        bloomPoint.position.set(x, y, z);
+        bloomPoint.userData = point;
+        
+        return bloomPoint;
+    }
+    
+    animate() {
+        this.animationId = requestAnimationFrame(() => this.animate());
+        
+        // Rotate globe slowly
+        if (this.globe) {
+            this.globe.rotation.y += 0.002;
+        }
+        
+        // Update controls
+        this.controls.update();
+        
+        // Render
+        this.renderer.render(this.scene, this.camera);
+    }
+    
+    onWindowResize() {
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+    
+    resetView() {
+        this.camera.position.set(0, 0, 3);
+        this.controls.reset();
+    }
+    
+    toggleAnimation() {
+        this.isAnimating = !this.isAnimating;
+        const icon = document.getElementById('animationIcon');
+        const status = document.getElementById('globeAnimationStatus');
+        
+        if (this.isAnimating) {
+            icon.className = 'fas fa-pause';
+            status.textContent = 'Playing';
+            // Globe rotation is always on, but we could add more animation here
+        } else {
+            icon.className = 'fas fa-play';
+            status.textContent = 'Paused';
+        }
+    }
+    
+    toggleBloomData() {
+        this.showBloomData = !this.showBloomData;
+        const icon = document.getElementById('bloomIcon');
+        const status = document.getElementById('globeBloomStatus');
+        
+        // Update bloom points visibility
+        this.bloomPoints.forEach(point => {
+            point.material.opacity = this.showBloomData ? 0.8 : 0;
+        });
+        
+        if (this.showBloomData) {
+            icon.className = 'fas fa-seedling';
+            status.textContent = 'Visible';
+        } else {
+            icon.className = 'fas fa-seedling';
+            status.textContent = 'Hidden';
+        }
+    }
+    
+    updateData(newData) {
+        this.data = newData;
+        this.addBloomData();
+        this.updateInfo();
+    }
+    
+    updateInfo() {
+        const dataCount = document.getElementById('globeDataCount');
+        if (dataCount && this.data) {
+            dataCount.textContent = this.data.total_points || 0;
+        }
+    }
+    
+    destroy() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+        
+        if (this.renderer) {
+            this.container.removeChild(this.renderer.domElement);
+        }
+        
+        window.removeEventListener('resize', this.onWindowResize);
+    }
+}
