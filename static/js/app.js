@@ -1241,10 +1241,36 @@ class Globe3D {
                     const originalY = windPoints.userData.originalPositions[i + 1];
                     const originalZ = windPoints.userData.originalPositions[i + 2];
                     
-                    // Add wind-like movement
-                    positions[i] = originalX + Math.sin(time + i * 0.1) * 0.01;
-                    positions[i + 1] = originalY + Math.cos(time + i * 0.1) * 0.01;
-                    positions[i + 2] = originalZ + Math.sin(time * 0.5 + i * 0.1) * 0.01;
+                    const windType = windPoints.userData.windTypes[i / 3];
+                    let speed, amplitude;
+                    
+                    // Different speeds and amplitudes for different wind types
+                    switch (windType) {
+                        case 'trade':
+                            speed = 0.5;
+                            amplitude = 0.008;
+                            break;
+                        case 'westerly':
+                            speed = 1.0;
+                            amplitude = 0.012;
+                            break;
+                        case 'polar':
+                            speed = 0.3;
+                            amplitude = 0.006;
+                            break;
+                        case 'jet':
+                            speed = 2.0;
+                            amplitude = 0.015;
+                            break;
+                        default:
+                            speed = 0.8;
+                            amplitude = 0.01;
+                    }
+                    
+                    // Add wind-like movement with different patterns
+                    positions[i] = originalX + Math.sin(time * speed + i * 0.05) * amplitude;
+                    positions[i + 1] = originalY + Math.cos(time * speed * 0.7 + i * 0.05) * amplitude * 0.5;
+                    positions[i + 2] = originalZ + Math.sin(time * speed * 0.5 + i * 0.05) * amplitude;
                 }
                 
                 windPoints.geometry.attributes.position.needsUpdate = true;
@@ -1380,26 +1406,95 @@ class Globe3D {
         
         // Create temperature gradient texture
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
         
-        // Create temperature gradient (blue=cold, red=hot)
-        const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-        gradient.addColorStop(0, '#0000ff'); // Cold (poles)
-        gradient.addColorStop(0.3, '#00ffff'); // Cool
-        gradient.addColorStop(0.5, '#00ff00'); // Moderate
-        gradient.addColorStop(0.7, '#ffff00'); // Warm
-        gradient.addColorStop(1, '#ff0000'); // Hot (equator)
+        // Create realistic temperature zones
+        // Arctic regions (very cold)
+        ctx.fillStyle = '#000080'; // Deep blue
+        ctx.fillRect(0, 0, 1024, 60);
+        ctx.fillRect(0, 452, 1024, 60);
         
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 512, 256);
+        // Subarctic regions
+        ctx.fillStyle = '#4169E1'; // Royal blue
+        ctx.fillRect(0, 60, 1024, 40);
+        ctx.fillRect(0, 412, 1024, 40);
         
-        // Add some temperature variation patterns
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+        // Temperate regions
+        ctx.fillStyle = '#00BFFF'; // Deep sky blue
+        ctx.fillRect(0, 100, 1024, 30);
+        ctx.fillRect(0, 382, 1024, 30);
+        
+        // Subtropical regions
+        ctx.fillStyle = '#32CD32'; // Lime green
+        ctx.fillRect(0, 130, 1024, 25);
+        ctx.fillRect(0, 357, 1024, 25);
+        
+        // Tropical regions (hot)
+        ctx.fillStyle = '#FF4500'; // Orange red
+        ctx.fillRect(0, 155, 1024, 30);
+        ctx.fillRect(0, 327, 1024, 30);
+        
+        // Equatorial region (hottest)
+        ctx.fillStyle = '#FF0000'; // Red
+        ctx.fillRect(0, 185, 1024, 20);
+        ctx.fillRect(0, 307, 1024, 20);
+        
+        // Add continental temperature variations
+        // North America - continental effect
+        ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
         ctx.beginPath();
-        ctx.ellipse(256, 128, 200, 50, 0, 0, 2 * Math.PI); // Equatorial heat
+        ctx.moveTo(150, 80);
+        ctx.bezierCurveTo(200, 60, 250, 70, 300, 90);
+        ctx.bezierCurveTo(350, 110, 400, 120, 450, 100);
+        ctx.bezierCurveTo(500, 80, 550, 60, 600, 80);
+        ctx.bezierCurveTo(650, 100, 700, 120, 750, 100);
+        ctx.bezierCurveTo(800, 80, 850, 60, 900, 80);
+        ctx.lineTo(900, 120);
+        ctx.bezierCurveTo(850, 100, 800, 120, 750, 140);
+        ctx.bezierCurveTo(700, 160, 650, 180, 600, 160);
+        ctx.bezierCurveTo(550, 140, 500, 160, 450, 180);
+        ctx.bezierCurveTo(400, 200, 350, 190, 300, 170);
+        ctx.bezierCurveTo(250, 150, 200, 160, 150, 140);
+        ctx.closePath();
         ctx.fill();
+        
+        // Europe - maritime influence
+        ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(450, 120);
+        ctx.bezierCurveTo(500, 100, 550, 110, 600, 130);
+        ctx.bezierCurveTo(650, 150, 700, 160, 750, 140);
+        ctx.bezierCurveTo(800, 120, 850, 100, 900, 120);
+        ctx.lineTo(900, 160);
+        ctx.bezierCurveTo(850, 140, 800, 160, 750, 180);
+        ctx.bezierCurveTo(700, 200, 650, 190, 600, 170);
+        ctx.bezierCurveTo(550, 150, 500, 160, 450, 180);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Asia - continental extremes
+        ctx.fillStyle = 'rgba(255, 50, 0, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(700, 60);
+        ctx.bezierCurveTo(750, 40, 800, 50, 850, 70);
+        ctx.bezierCurveTo(900, 90, 950, 100, 1000, 80);
+        ctx.lineTo(1000, 120);
+        ctx.bezierCurveTo(950, 100, 900, 120, 850, 140);
+        ctx.bezierCurveTo(800, 160, 750, 150, 700, 130);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add ocean current influences
+        ctx.fillStyle = 'rgba(0, 100, 200, 0.2)';
+        for (let i = 0; i < 8; i++) {
+            const x = i * 128;
+            const y = 256 + Math.sin(i * 0.5) * 50;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 60, 20, 0, 0, 2 * Math.PI);
+            ctx.fill();
+        }
         
         const texture = new THREE.CanvasTexture(canvas);
         material.map = texture;
@@ -1410,42 +1505,137 @@ class Globe3D {
     }
     
     createWindLayer() {
-        // Create animated wind current lines
-        const windLines = [];
+        // Create realistic wind patterns
         const windGeometry = new THREE.BufferGeometry();
         const windPositions = [];
         const windColors = [];
         
-        // Generate wind current paths
-        for (let i = 0; i < 50; i++) {
-            const lat = (Math.random() - 0.5) * Math.PI;
-            const lon = Math.random() * Math.PI * 2;
-            const radius = 1.02;
-            
-            const x = radius * Math.cos(lat) * Math.cos(lon);
-            const y = radius * Math.sin(lat);
-            const z = radius * Math.cos(lat) * Math.sin(lon);
-            
-            windPositions.push(x, y, z);
-            windColors.push(0.5, 0.8, 1.0, 0.8); // Light blue with transparency
+        // Create major wind patterns
+        // Trade winds (easterlies) - 0-30 degrees latitude
+        for (let lat = -30; lat <= 30; lat += 5) {
+            for (let lon = 0; lon < 360; lon += 15) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.02;
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Trade winds - light blue
+                windColors.push(0.3, 0.7, 1.0, 0.7);
+            }
+        }
+        
+        // Westerlies - 30-60 degrees latitude
+        for (let lat = -60; lat <= -30; lat += 5) {
+            for (let lon = 0; lon < 360; lon += 20) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.02;
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Westerlies - cyan
+                windColors.push(0.0, 0.8, 1.0, 0.6);
+            }
+        }
+        
+        for (let lat = 30; lat <= 60; lat += 5) {
+            for (let lon = 0; lon < 360; lon += 20) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.02;
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Westerlies - cyan
+                windColors.push(0.0, 0.8, 1.0, 0.6);
+            }
+        }
+        
+        // Polar easterlies - 60-90 degrees latitude
+        for (let lat = -90; lat <= -60; lat += 8) {
+            for (let lon = 0; lon < 360; lon += 25) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.02;
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Polar easterlies - white
+                windColors.push(0.8, 0.9, 1.0, 0.5);
+            }
+        }
+        
+        for (let lat = 60; lat <= 90; lat += 8) {
+            for (let lon = 0; lon < 360; lon += 25) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.02;
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Polar easterlies - white
+                windColors.push(0.8, 0.9, 1.0, 0.5);
+            }
+        }
+        
+        // Jet streams - high altitude winds
+        for (let lat = -40; lat <= 40; lat += 10) {
+            for (let lon = 0; lon < 360; lon += 30) {
+                const latRad = (lat * Math.PI) / 180;
+                const lonRad = (lon * Math.PI) / 180;
+                const radius = 1.03; // Slightly higher altitude
+                
+                const x = radius * Math.cos(latRad) * Math.cos(lonRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lonRad);
+                
+                windPositions.push(x, y, z);
+                // Jet streams - bright white
+                windColors.push(1.0, 1.0, 1.0, 0.8);
+            }
         }
         
         windGeometry.setAttribute('position', new THREE.Float32BufferAttribute(windPositions, 3));
         windGeometry.setAttribute('color', new THREE.Float32BufferAttribute(windColors, 4));
         
         const windMaterial = new THREE.PointsMaterial({
-            size: 0.02,
+            size: 0.015,
             vertexColors: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.7
         });
         
         const windPoints = new THREE.Points(windGeometry, windMaterial);
         this.scene.add(windPoints);
         this.layers.wind.objects.push(windPoints);
         
-        // Store reference for animation
-        windPoints.userData = { originalPositions: [...windPositions] };
+        // Store reference for animation with different speeds for different wind types
+        windPoints.userData = { 
+            originalPositions: [...windPositions],
+            windTypes: windPositions.map((pos, i) => {
+                const y = pos[1];
+                if (Math.abs(y) < 0.5) return 'trade'; // Trade winds
+                if (Math.abs(y) < 0.8) return 'westerly'; // Westerlies
+                if (Math.abs(y) < 0.95) return 'polar'; // Polar easterlies
+                return 'jet'; // Jet streams
+            })
+        };
     }
     
     createVegetationLayer() {
@@ -1459,32 +1649,154 @@ class Globe3D {
         
         // Create vegetation texture
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
         
         // Base ocean color
         ctx.fillStyle = '#000080';
-        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillRect(0, 0, 1024, 512);
         
-        // Add vegetation areas
+        // North America - Boreal Forest
+        ctx.fillStyle = '#006400'; // Dark green
+        ctx.beginPath();
+        ctx.moveTo(100, 80);
+        ctx.bezierCurveTo(150, 60, 200, 70, 250, 90);
+        ctx.bezierCurveTo(300, 110, 350, 120, 400, 100);
+        ctx.bezierCurveTo(450, 80, 500, 60, 550, 80);
+        ctx.bezierCurveTo(600, 100, 650, 120, 700, 100);
+        ctx.bezierCurveTo(750, 80, 800, 60, 850, 80);
+        ctx.lineTo(850, 120);
+        ctx.bezierCurveTo(800, 100, 750, 120, 700, 140);
+        ctx.bezierCurveTo(650, 160, 600, 180, 550, 160);
+        ctx.bezierCurveTo(500, 140, 450, 160, 400, 180);
+        ctx.bezierCurveTo(350, 200, 300, 190, 250, 170);
+        ctx.bezierCurveTo(200, 150, 150, 160, 100, 140);
+        ctx.closePath();
+        ctx.fill();
+        
+        // North America - Temperate Forest
         ctx.fillStyle = '#228B22'; // Forest green
         ctx.beginPath();
-        ctx.ellipse(150, 100, 80, 60, 0, 0, 2 * Math.PI); // North America
+        ctx.moveTo(150, 140);
+        ctx.bezierCurveTo(200, 120, 250, 130, 300, 150);
+        ctx.bezierCurveTo(350, 170, 400, 180, 450, 160);
+        ctx.bezierCurveTo(500, 140, 550, 120, 600, 140);
+        ctx.bezierCurveTo(650, 160, 700, 180, 750, 160);
+        ctx.bezierCurveTo(800, 140, 850, 120, 900, 140);
+        ctx.lineTo(900, 180);
+        ctx.bezierCurveTo(850, 160, 800, 180, 750, 200);
+        ctx.bezierCurveTo(700, 220, 650, 240, 600, 220);
+        ctx.bezierCurveTo(550, 200, 500, 220, 450, 240);
+        ctx.bezierCurveTo(400, 260, 350, 250, 300, 230);
+        ctx.bezierCurveTo(250, 210, 200, 220, 150, 200);
+        ctx.closePath();
         ctx.fill();
         
+        // Europe - Mixed Forest
+        ctx.fillStyle = '#32CD32'; // Lime green
         ctx.beginPath();
-        ctx.ellipse(300, 150, 100, 80, 0, 0, 2 * Math.PI); // Europe/Africa
+        ctx.moveTo(450, 120);
+        ctx.bezierCurveTo(500, 100, 550, 110, 600, 130);
+        ctx.bezierCurveTo(650, 150, 700, 160, 750, 140);
+        ctx.bezierCurveTo(800, 120, 850, 100, 900, 120);
+        ctx.lineTo(900, 160);
+        ctx.bezierCurveTo(850, 140, 800, 160, 750, 180);
+        ctx.bezierCurveTo(700, 200, 650, 190, 600, 170);
+        ctx.bezierCurveTo(550, 150, 500, 160, 450, 180);
+        ctx.closePath();
         ctx.fill();
         
+        // Asia - Taiga and Temperate Forest
+        ctx.fillStyle = '#006400'; // Dark green for taiga
         ctx.beginPath();
-        ctx.ellipse(400, 120, 60, 40, 0, 0, 2 * Math.PI); // Asia
+        ctx.moveTo(700, 60);
+        ctx.bezierCurveTo(750, 40, 800, 50, 850, 70);
+        ctx.bezierCurveTo(900, 90, 950, 100, 1000, 80);
+        ctx.lineTo(1000, 120);
+        ctx.bezierCurveTo(950, 100, 900, 120, 850, 140);
+        ctx.bezierCurveTo(800, 160, 750, 150, 700, 130);
+        ctx.closePath();
         ctx.fill();
         
-        // Add some grassland areas
+        // Asia - Temperate Forest
+        ctx.fillStyle = '#228B22'; // Forest green
+        ctx.beginPath();
+        ctx.moveTo(750, 130);
+        ctx.bezierCurveTo(800, 110, 850, 120, 900, 140);
+        ctx.bezierCurveTo(950, 160, 1000, 170, 1024, 150);
+        ctx.lineTo(1024, 190);
+        ctx.bezierCurveTo(1000, 170, 950, 190, 900, 210);
+        ctx.bezierCurveTo(850, 230, 800, 220, 750, 200);
+        ctx.closePath();
+        ctx.fill();
+        
+        // South America - Amazon Rainforest
+        ctx.fillStyle = '#006400'; // Dark green
+        ctx.beginPath();
+        ctx.moveTo(200, 300);
+        ctx.bezierCurveTo(250, 280, 300, 290, 350, 310);
+        ctx.bezierCurveTo(400, 330, 450, 340, 500, 320);
+        ctx.bezierCurveTo(550, 300, 600, 280, 650, 300);
+        ctx.lineTo(650, 340);
+        ctx.bezierCurveTo(600, 320, 550, 340, 500, 360);
+        ctx.bezierCurveTo(450, 380, 400, 370, 350, 350);
+        ctx.bezierCurveTo(300, 330, 250, 340, 200, 360);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Africa - Tropical and Subtropical
+        ctx.fillStyle = '#228B22'; // Forest green
+        ctx.beginPath();
+        ctx.moveTo(500, 250);
+        ctx.bezierCurveTo(550, 230, 600, 240, 650, 260);
+        ctx.bezierCurveTo(700, 280, 750, 290, 800, 270);
+        ctx.bezierCurveTo(850, 250, 900, 230, 950, 250);
+        ctx.lineTo(950, 290);
+        ctx.bezierCurveTo(900, 270, 850, 290, 800, 310);
+        ctx.bezierCurveTo(750, 330, 700, 320, 650, 300);
+        ctx.bezierCurveTo(600, 280, 550, 290, 500, 310);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Australia - Eucalyptus and Desert
         ctx.fillStyle = '#9ACD32'; // Yellow green
         ctx.beginPath();
-        ctx.ellipse(200, 180, 60, 30, 0, 0, 2 * Math.PI);
+        ctx.moveTo(800, 350);
+        ctx.bezierCurveTo(850, 330, 900, 340, 950, 360);
+        ctx.bezierCurveTo(1000, 380, 1024, 390, 1024, 370);
+        ctx.lineTo(1024, 410);
+        ctx.bezierCurveTo(1000, 390, 950, 410, 900, 430);
+        ctx.bezierCurveTo(850, 450, 800, 440, 800, 420);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add grassland areas
+        ctx.fillStyle = '#9ACD32'; // Yellow green
+        // North American Great Plains
+        ctx.beginPath();
+        ctx.moveTo(200, 200);
+        ctx.bezierCurveTo(250, 180, 300, 190, 350, 210);
+        ctx.bezierCurveTo(400, 230, 450, 240, 500, 220);
+        ctx.bezierCurveTo(550, 200, 600, 180, 650, 200);
+        ctx.lineTo(650, 240);
+        ctx.bezierCurveTo(600, 220, 550, 240, 500, 260);
+        ctx.bezierCurveTo(450, 280, 400, 270, 350, 250);
+        ctx.bezierCurveTo(300, 230, 250, 240, 200, 260);
+        ctx.closePath();
+        ctx.fill();
+        
+        // African Savanna
+        ctx.beginPath();
+        ctx.moveTo(500, 320);
+        ctx.bezierCurveTo(550, 300, 600, 310, 650, 330);
+        ctx.bezierCurveTo(700, 350, 750, 360, 800, 340);
+        ctx.bezierCurveTo(850, 320, 900, 300, 950, 320);
+        ctx.lineTo(950, 360);
+        ctx.bezierCurveTo(900, 340, 850, 360, 800, 380);
+        ctx.bezierCurveTo(750, 400, 700, 390, 650, 370);
+        ctx.bezierCurveTo(600, 350, 550, 360, 500, 380);
+        ctx.closePath();
         ctx.fill();
         
         const texture = new THREE.CanvasTexture(canvas);
@@ -1506,28 +1818,126 @@ class Globe3D {
         
         // Create precipitation texture
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
         
         // Base transparent
-        ctx.clearRect(0, 0, 512, 256);
+        ctx.clearRect(0, 0, 1024, 512);
         
-        // Add precipitation patterns
-        ctx.fillStyle = 'rgba(0, 100, 255, 0.6)'; // Blue for rain
+        // Tropical Rain Belt (ITCZ)
+        ctx.fillStyle = 'rgba(0, 100, 255, 0.7)'; // Blue for rain
         ctx.beginPath();
-        ctx.ellipse(256, 128, 150, 80, 0, 0, 2 * Math.PI); // Tropical rain belt
+        ctx.moveTo(0, 200);
+        ctx.bezierCurveTo(200, 180, 400, 190, 600, 200);
+        ctx.bezierCurveTo(800, 210, 1000, 200, 1024, 190);
+        ctx.lineTo(1024, 230);
+        ctx.bezierCurveTo(1000, 220, 800, 230, 600, 220);
+        ctx.bezierCurveTo(400, 210, 200, 220, 0, 230);
+        ctx.closePath();
         ctx.fill();
         
-        // Add some scattered precipitation
-        for (let i = 0; i < 20; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 256;
-            const size = Math.random() * 30 + 10;
+        // Monsoon regions
+        // Indian Monsoon
+        ctx.fillStyle = 'rgba(0, 150, 255, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(600, 150);
+        ctx.bezierCurveTo(650, 130, 700, 140, 750, 160);
+        ctx.bezierCurveTo(800, 180, 850, 190, 900, 170);
+        ctx.bezierCurveTo(950, 150, 1000, 130, 1024, 150);
+        ctx.lineTo(1024, 190);
+        ctx.bezierCurveTo(1000, 170, 950, 190, 900, 210);
+        ctx.bezierCurveTo(850, 230, 800, 220, 750, 200);
+        ctx.bezierCurveTo(700, 180, 650, 190, 600, 210);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Southeast Asian Monsoon
+        ctx.fillStyle = 'rgba(0, 120, 255, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(800, 200);
+        ctx.bezierCurveTo(850, 180, 900, 190, 950, 210);
+        ctx.bezierCurveTo(1000, 230, 1024, 240, 1024, 220);
+        ctx.lineTo(1024, 260);
+        ctx.bezierCurveTo(1000, 250, 950, 260, 900, 280);
+        ctx.bezierCurveTo(850, 300, 800, 290, 800, 270);
+        ctx.closePath();
+        ctx.fill();
+        
+        // West African Monsoon
+        ctx.fillStyle = 'rgba(0, 130, 255, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(400, 200);
+        ctx.bezierCurveTo(450, 180, 500, 190, 550, 210);
+        ctx.bezierCurveTo(600, 230, 650, 240, 700, 220);
+        ctx.bezierCurveTo(750, 200, 800, 180, 850, 200);
+        ctx.lineTo(850, 240);
+        ctx.bezierCurveTo(800, 220, 750, 240, 700, 260);
+        ctx.bezierCurveTo(650, 280, 600, 270, 550, 250);
+        ctx.bezierCurveTo(500, 230, 450, 240, 400, 260);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Amazon Rainforest precipitation
+        ctx.fillStyle = 'rgba(0, 100, 255, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(200, 300);
+        ctx.bezierCurveTo(250, 280, 300, 290, 350, 310);
+        ctx.bezierCurveTo(400, 330, 450, 340, 500, 320);
+        ctx.bezierCurveTo(550, 300, 600, 280, 650, 300);
+        ctx.lineTo(650, 340);
+        ctx.bezierCurveTo(600, 320, 550, 340, 500, 360);
+        ctx.bezierCurveTo(450, 380, 400, 370, 350, 350);
+        ctx.bezierCurveTo(300, 330, 250, 340, 200, 360);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Mid-latitude storm tracks
+        ctx.fillStyle = 'rgba(0, 80, 200, 0.4)';
+        // North Atlantic storm track
+        ctx.beginPath();
+        ctx.moveTo(300, 100);
+        ctx.bezierCurveTo(400, 80, 500, 90, 600, 110);
+        ctx.bezierCurveTo(700, 130, 800, 140, 900, 120);
+        ctx.lineTo(900, 160);
+        ctx.bezierCurveTo(800, 140, 700, 150, 600, 170);
+        ctx.bezierCurveTo(500, 190, 400, 180, 300, 160);
+        ctx.closePath();
+        ctx.fill();
+        
+        // North Pacific storm track
+        ctx.beginPath();
+        ctx.moveTo(100, 120);
+        ctx.bezierCurveTo(200, 100, 300, 110, 400, 130);
+        ctx.bezierCurveTo(500, 150, 600, 160, 700, 140);
+        ctx.lineTo(700, 180);
+        ctx.bezierCurveTo(600, 160, 500, 170, 400, 190);
+        ctx.bezierCurveTo(300, 210, 200, 200, 100, 180);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Southern Ocean storm tracks
+        ctx.fillStyle = 'rgba(0, 60, 180, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(0, 400);
+        ctx.bezierCurveTo(200, 380, 400, 390, 600, 410);
+        ctx.bezierCurveTo(800, 430, 1000, 440, 1024, 420);
+        ctx.lineTo(1024, 460);
+        ctx.bezierCurveTo(1000, 440, 800, 450, 600, 470);
+        ctx.bezierCurveTo(400, 490, 200, 480, 0, 460);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add some scattered precipitation areas
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const size = Math.random() * 40 + 15;
+            const intensity = Math.random() * 0.4 + 0.1;
             
-            ctx.fillStyle = `rgba(0, 100, 255, ${Math.random() * 0.5 + 0.2})`;
+            ctx.fillStyle = `rgba(0, 100, 255, ${intensity})`;
             ctx.beginPath();
-            ctx.ellipse(x, y, size, size * 0.5, 0, 0, 2 * Math.PI);
+            ctx.ellipse(x, y, size, size * 0.6, 0, 0, 2 * Math.PI);
             ctx.fill();
         }
         
@@ -1550,29 +1960,143 @@ class Globe3D {
         
         // Create elevation texture
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
         
         // Base ocean color
         ctx.fillStyle = '#000080';
-        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillRect(0, 0, 1024, 512);
         
-        // Add elevation areas (brown for mountains)
+        // Rocky Mountains (North America)
         ctx.fillStyle = '#8B4513'; // Saddle brown
         ctx.beginPath();
-        ctx.ellipse(200, 100, 60, 40, 0, 0, 2 * Math.PI); // Mountain ranges
+        ctx.moveTo(200, 100);
+        ctx.bezierCurveTo(250, 80, 300, 90, 350, 110);
+        ctx.bezierCurveTo(400, 130, 450, 140, 500, 120);
+        ctx.bezierCurveTo(550, 100, 600, 80, 650, 100);
+        ctx.lineTo(650, 140);
+        ctx.bezierCurveTo(600, 120, 550, 140, 500, 160);
+        ctx.bezierCurveTo(450, 180, 400, 170, 350, 150);
+        ctx.bezierCurveTo(300, 130, 250, 140, 200, 160);
+        ctx.closePath();
         ctx.fill();
         
-        ctx.beginPath();
-        ctx.ellipse(350, 120, 80, 50, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Add some hills (lighter brown)
+        // Appalachian Mountains
         ctx.fillStyle = '#A0522D'; // Sienna
         ctx.beginPath();
-        ctx.ellipse(150, 150, 40, 25, 0, 0, 2 * Math.PI);
+        ctx.moveTo(250, 150);
+        ctx.bezierCurveTo(300, 130, 350, 140, 400, 160);
+        ctx.bezierCurveTo(450, 180, 500, 190, 550, 170);
+        ctx.bezierCurveTo(600, 150, 650, 130, 700, 150);
+        ctx.lineTo(700, 190);
+        ctx.bezierCurveTo(650, 170, 600, 190, 550, 210);
+        ctx.bezierCurveTo(500, 230, 450, 220, 400, 200);
+        ctx.bezierCurveTo(350, 180, 300, 190, 250, 210);
+        ctx.closePath();
         ctx.fill();
+        
+        // Alps (Europe)
+        ctx.fillStyle = '#8B4513'; // Saddle brown
+        ctx.beginPath();
+        ctx.moveTo(500, 120);
+        ctx.bezierCurveTo(550, 100, 600, 110, 650, 130);
+        ctx.bezierCurveTo(700, 150, 750, 160, 800, 140);
+        ctx.bezierCurveTo(850, 120, 900, 100, 950, 120);
+        ctx.lineTo(950, 160);
+        ctx.bezierCurveTo(900, 140, 850, 160, 800, 180);
+        ctx.bezierCurveTo(750, 200, 700, 190, 650, 170);
+        ctx.bezierCurveTo(600, 150, 550, 160, 500, 180);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Himalayas and Tibetan Plateau
+        ctx.fillStyle = '#654321'; // Dark brown
+        ctx.beginPath();
+        ctx.moveTo(700, 100);
+        ctx.bezierCurveTo(750, 80, 800, 90, 850, 110);
+        ctx.bezierCurveTo(900, 130, 950, 140, 1000, 120);
+        ctx.lineTo(1000, 160);
+        ctx.bezierCurveTo(950, 140, 900, 160, 850, 180);
+        ctx.bezierCurveTo(800, 200, 750, 190, 700, 170);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Ural Mountains
+        ctx.fillStyle = '#A0522D'; // Sienna
+        ctx.beginPath();
+        ctx.moveTo(600, 80);
+        ctx.bezierCurveTo(650, 60, 700, 70, 750, 90);
+        ctx.bezierCurveTo(800, 110, 850, 120, 900, 100);
+        ctx.lineTo(900, 140);
+        ctx.bezierCurveTo(850, 120, 800, 140, 750, 160);
+        ctx.bezierCurveTo(700, 180, 650, 170, 600, 150);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Andes Mountains (South America)
+        ctx.fillStyle = '#8B4513'; // Saddle brown
+        ctx.beginPath();
+        ctx.moveTo(150, 250);
+        ctx.bezierCurveTo(200, 230, 250, 240, 300, 260);
+        ctx.bezierCurveTo(350, 280, 400, 290, 450, 270);
+        ctx.bezierCurveTo(500, 250, 550, 230, 600, 250);
+        ctx.lineTo(600, 290);
+        ctx.bezierCurveTo(550, 270, 500, 290, 450, 310);
+        ctx.bezierCurveTo(400, 330, 350, 320, 300, 300);
+        ctx.bezierCurveTo(250, 280, 200, 290, 150, 310);
+        ctx.closePath();
+        ctx.fill();
+        
+        // African Highlands
+        ctx.fillStyle = '#A0522D'; // Sienna
+        ctx.beginPath();
+        ctx.moveTo(500, 200);
+        ctx.bezierCurveTo(550, 180, 600, 190, 650, 210);
+        ctx.bezierCurveTo(700, 230, 750, 240, 800, 220);
+        ctx.bezierCurveTo(850, 200, 900, 180, 950, 200);
+        ctx.lineTo(950, 240);
+        ctx.bezierCurveTo(900, 220, 850, 240, 800, 260);
+        ctx.bezierCurveTo(750, 280, 700, 270, 650, 250);
+        ctx.bezierCurveTo(600, 230, 550, 240, 500, 260);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Australian Great Dividing Range
+        ctx.fillStyle = '#A0522D'; // Sienna
+        ctx.beginPath();
+        ctx.moveTo(800, 350);
+        ctx.bezierCurveTo(850, 330, 900, 340, 950, 360);
+        ctx.bezierCurveTo(1000, 380, 1024, 390, 1024, 370);
+        ctx.lineTo(1024, 410);
+        ctx.bezierCurveTo(1000, 390, 950, 410, 900, 430);
+        ctx.bezierCurveTo(850, 450, 800, 440, 800, 420);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add some highland areas
+        ctx.fillStyle = '#CD853F'; // Peru
+        // Tibetan Plateau
+        ctx.beginPath();
+        ctx.moveTo(750, 120);
+        ctx.bezierCurveTo(800, 100, 850, 110, 900, 130);
+        ctx.bezierCurveTo(950, 150, 1000, 160, 1024, 140);
+        ctx.lineTo(1024, 180);
+        ctx.bezierCurveTo(1000, 160, 950, 180, 900, 200);
+        ctx.bezierCurveTo(850, 220, 800, 210, 750, 190);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add some volcanic regions
+        ctx.fillStyle = '#B22222'; // Fire brick
+        // Ring of Fire (Pacific)
+        for (let i = 0; i < 8; i++) {
+            const x = 100 + i * 100;
+            const y = 200 + Math.sin(i * 0.5) * 50;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 15, 10, 0, 0, 2 * Math.PI);
+            ctx.fill();
+        }
         
         const texture = new THREE.CanvasTexture(canvas);
         material.map = texture;
