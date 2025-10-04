@@ -1117,15 +1117,45 @@ class BloomWatchApp {
                 </div>
             ` : '';
             
-            // Data quality info
+            // NASA data source information
+            const nasaMetadata = climateSummary.nasa_metadata || {};
+            const dataAvailability = climateSummary.data_availability || 'unknown';
+            
+            // Data quality info with NASA sources
             const qualityInfo = dataQuality.analysis_completeness ? `
                 <div class="mt-3 pt-3 border-top">
-                    <small class="text-muted">
-                        <i class="fas fa-database me-1"></i>
-                        Analysis: ${dataQuality.analysis_completeness} | 
-                        Climate Points: ${dataQuality.climate_data_points} | 
-                        Bloom Points: ${dataQuality.bloom_data_points}
-                    </small>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-satellite me-1"></i>
+                                <strong>NASA Source:</strong> ${nasaMetadata.data_source || 'NASA POWER API'}
+                            </small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">
+                                <i class="fas fa-database me-1"></i>
+                                Analysis: ${dataQuality.analysis_completeness}
+                            </small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">
+                                <i class="fas fa-chart-line me-1"></i>
+                                Climate: ${dataQuality.climate_data_points} | Bloom: ${dataQuality.bloom_data_points}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-${dataAvailability === 'real_nasa_data' ? 'success' : dataAvailability === 'simulated_nasa_data' ? 'warning' : 'secondary'}">
+                            <i class="fas fa-${dataAvailability === 'real_nasa_data' ? 'satellite' : 'database'} me-1"></i>
+                            ${dataAvailability === 'real_nasa_data' ? 'Live NASA Data' : dataAvailability === 'simulated_nasa_data' ? 'Simulated NASA Data' : 'Unknown Source'}
+                        </span>
+                        ${nasaMetadata.data_provider ? `
+                            <span class="badge bg-info ms-1">
+                                <i class="fas fa-rocket me-1"></i>
+                                ${nasaMetadata.data_provider}
+                            </span>
+                        ` : ''}
+                    </div>
                 </div>
             ` : '';
             
@@ -1303,8 +1333,71 @@ class BloomWatchApp {
 }
 
 // Initialize the application when the DOM is loaded
+// NASA Attribution Functions
+async function fetchNASAAttribution() {
+    try {
+        const response = await fetch('/api/nasa-attribution');
+        if (response.ok) {
+            const attribution = await response.json();
+            displayNASAAttribution(attribution);
+        }
+    } catch (error) {
+        console.error('Failed to fetch NASA attribution:', error);
+    }
+}
+
+function displayNASAAttribution(attribution) {
+    const attributionCard = document.getElementById('nasaAttributionCard');
+    if (!attributionCard) return;
+
+    const nasaAPIs = attribution.nasa_apis || {};
+    const dataUsage = attribution.data_usage || {};
+
+    const apisList = Object.entries(nasaAPIs).map(([key, api]) => `
+        <div class="mb-3">
+            <h6 class="text-primary">${api.name}</h6>
+            <p class="small text-muted mb-1">${api.description}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Provider: ${api.provider}</small>
+                <a href="${api.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Visit
+                </a>
+            </div>
+        </div>
+    `).join('');
+
+    attributionCard.innerHTML = `
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="fas fa-rocket me-2"></i>NASA Data Sources</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <h6 class="text-info">Data Sources</h6>
+                ${apisList}
+            </div>
+            
+            <div class="mb-3">
+                <h6 class="text-info">Usage Terms</h6>
+                <p class="small text-muted mb-2">${dataUsage.terms || 'NASA data is freely available for research and educational purposes'}</p>
+                <p class="small text-muted mb-2"><strong>Attribution:</strong> ${dataUsage.attribution || 'Data provided by NASA Earth Science Data Systems'}</p>
+                <p class="small text-muted"><strong>Disclaimer:</strong> ${dataUsage.disclaimer || 'This application uses NASA data for demonstration purposes'}</p>
+            </div>
+            
+            <div class="text-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Last updated: ${new Date(attribution.last_updated).toLocaleString()}
+                </small>
+            </div>
+        </div>
+    `;
+    attributionCard.style.display = 'block';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new BloomWatchApp();
+    // Load NASA attribution on page load
+    fetchNASAAttribution();
 });
 
 // Add some utility functions
