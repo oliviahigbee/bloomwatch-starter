@@ -1,4 +1,4 @@
-// BloomWatch Application JavaScript
+// BloomWatch Kids - Fun Educational Application JavaScript! 🌱
 
 class BloomWatchApp {
     constructor() {
@@ -21,6 +21,21 @@ class BloomWatchApp {
         this.dataQuality = {};
         this.advancedAnalytics = {};
         
+        // Fun educational features for kids! 🎓
+        this.funFacts = [
+            "🌱 Did you know? Plants make their own food using sunlight!",
+            "🌍 Our Earth has over 400,000 different types of plants!",
+            "🚀 NASA satellites can see plants from space!",
+            "🌸 Some flowers can bloom in just one day!",
+            "🌳 Trees can live for thousands of years!",
+            "🌿 Plants help clean the air we breathe!",
+            "🦋 Many plants need animals to help them grow!",
+            "🌧️ Rain helps plants grow big and strong!"
+        ];
+        this.currentFactIndex = 0;
+        this.achievements = [];
+        this.learningProgress = 0;
+        
         this.init();
     }
     
@@ -34,6 +49,8 @@ class BloomWatchApp {
         this.setupEventListeners();
         this.startRealTimeUpdates();
         this.initializeAdvancedAnalytics();
+        this.startFunFacts();
+        this.initializeEducationalFeatures();
     }
     
     startPerformanceMonitoring() {
@@ -3092,3 +3109,265 @@ class Globe3D {
         window.removeEventListener('resize', this.onWindowResize);
     }
 }
+
+// Fun Educational Features for Kids! 🎓
+BloomWatchApp.prototype.startFunFacts = function() {
+    // Show fun facts every 30 seconds
+    setInterval(() => {
+        this.showFunFact();
+    }, 30000);
+    
+    // Show first fact after 5 seconds
+    setTimeout(() => {
+        this.showFunFact();
+    }, 5000);
+};
+
+BloomWatchApp.prototype.showFunFact = function() {
+    const fact = this.funFacts[this.currentFactIndex];
+    this.currentFactIndex = (this.currentFactIndex + 1) % this.funFacts.length;
+    
+    // Create a fun notification
+    this.showNotification(fact, 'info', 5000);
+    
+    // Add to learning progress
+    this.learningProgress += 1;
+    this.checkAchievements();
+};
+
+BloomWatchApp.prototype.initializeEducationalFeatures = function() {
+    // Add educational tooltips to buttons
+    this.addEducationalTooltips();
+    
+    // Initialize achievement system
+    this.initializeAchievements();
+    
+    // Add fun sound effects (visual feedback)
+    this.addFunEffects();
+};
+
+BloomWatchApp.prototype.addEducationalTooltips = function() {
+    // Add fun tooltips to help kids understand what each button does
+    const tooltips = {
+        'predictBloom': '🔮 This button helps us guess when plants will bloom!',
+        'detectAnomalies': '🔍 This finds special or unusual plants!',
+        'analyzeClimate': '🌡️ This shows how weather affects plants!',
+        'view3DGlobe': '🌍 This shows our Earth in 3D!',
+        'refreshData': '🔄 This gets the newest plant information!'
+    };
+    
+    Object.keys(tooltips).forEach(buttonId => {
+        const button = document.querySelector(`[onclick*="${buttonId}"]`);
+        if (button) {
+            button.setAttribute('data-bs-toggle', 'tooltip');
+            button.setAttribute('data-bs-placement', 'top');
+            button.setAttribute('title', tooltips[buttonId]);
+        }
+    });
+    
+    // Initialize Bootstrap tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+};
+
+BloomWatchApp.prototype.initializeAchievements = function() {
+    this.achievements = [
+        { id: 'first_explore', name: '🌍 World Explorer', description: 'Explored your first location!', unlocked: false },
+        { id: 'data_master', name: '📊 Data Detective', description: 'Looked at plant data 5 times!', unlocked: false, progress: 0, target: 5 },
+        { id: 'fact_learner', name: '🎓 Plant Expert', description: 'Learned 10 fun plant facts!', unlocked: false, progress: 0, target: 10 },
+        { id: 'map_navigator', name: '🗺️ Map Navigator', description: 'Clicked on 3 different places on the map!', unlocked: false, progress: 0, target: 3 },
+        { id: 'time_traveler', name: '⏰ Time Traveler', description: 'Explored different time periods!', unlocked: false, progress: 0, target: 3 }
+    ];
+};
+
+BloomWatchApp.prototype.checkAchievements = function() {
+    this.achievements.forEach(achievement => {
+        if (achievement.unlocked) return;
+        
+        let shouldUnlock = false;
+        
+        switch (achievement.id) {
+            case 'first_explore':
+                if (this.currentLocation !== 'global') {
+                    shouldUnlock = true;
+                }
+                break;
+            case 'data_master':
+                achievement.progress = (achievement.progress || 0) + 1;
+                if (achievement.progress >= achievement.target) {
+                    shouldUnlock = true;
+                }
+                break;
+            case 'fact_learner':
+                achievement.progress = this.learningProgress;
+                if (achievement.progress >= achievement.target) {
+                    shouldUnlock = true;
+                }
+                break;
+            case 'map_navigator':
+                // This would be tracked when user clicks on map markers
+                break;
+            case 'time_traveler':
+                // This would be tracked when user changes time range
+                break;
+        }
+        
+        if (shouldUnlock) {
+            this.unlockAchievement(achievement);
+        }
+    });
+};
+
+BloomWatchApp.prototype.unlockAchievement = function(achievement) {
+    achievement.unlocked = true;
+    this.showNotification(`🏆 Achievement Unlocked: ${achievement.name}! ${achievement.description}`, 'success', 8000);
+    
+    // Add confetti effect
+    this.showConfetti();
+};
+
+BloomWatchApp.prototype.showConfetti = function() {
+    // Create a simple confetti effect
+    const colors = ['#4CAF50', '#2196F3', '#FFEB3B', '#FF5722', '#9C27B0'];
+    
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.top = '-10px';
+            confetti.style.borderRadius = '50%';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.zIndex = '9999';
+            confetti.style.animation = 'fall 3s linear forwards';
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000);
+        }, i * 50);
+    }
+    
+    // Add CSS animation for confetti
+    if (!document.getElementById('confetti-styles')) {
+        const style = document.createElement('style');
+        style.id = 'confetti-styles';
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+};
+
+BloomWatchApp.prototype.addFunEffects = function() {
+    // Add fun hover effects to buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'scale(1.05) rotate(2deg)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+    });
+};
+
+BloomWatchApp.prototype.showNotification = function(message, type = 'info', duration = 5000) {
+    // Create a fun notification
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        border-radius: 20px;
+        border: 3px solid;
+        font-family: 'Comic Neue', cursive;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: slideInRight 0.5s ease-out;
+    `;
+    
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="me-3" style="font-size: 2rem;">${this.getNotificationIcon(type)}</div>
+            <div>${message}</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, duration);
+};
+
+BloomWatchApp.prototype.getNotificationIcon = function(type) {
+    const icons = {
+        'success': '🎉',
+        'info': '💡',
+        'warning': '⚠️',
+        'danger': '🚨'
+    };
+    return icons[type] || '💡';
+};
+
+// Override some functions to make them more kid-friendly
+BloomWatchApp.prototype.loadInitialData = function() {
+    this.showNotification('🚀 Welcome to BloomWatch Kids! Let\'s explore plants together!', 'success', 6000);
+    
+    // Call the original function
+    this.loadLocationData('global');
+};
+
+BloomWatchApp.prototype.updateCity = function() {
+    const citySelect = document.getElementById('citySelect');
+    const selectedCity = citySelect.value;
+    
+    // Show fun message
+    const cityNames = {
+        'global': 'the whole world',
+        'new-york': 'New York City',
+        'london': 'London',
+        'tokyo': 'Tokyo',
+        'sao-paulo': 'São Paulo',
+        'sydney': 'Sydney',
+        'cape-town': 'Cape Town',
+        'mumbai': 'Mumbai',
+        'paris': 'Paris',
+        'los-angeles': 'Los Angeles',
+        'buenos-aires': 'Buenos Aires',
+        'cairo': 'Cairo',
+        'moscow': 'Moscow'
+    };
+    
+    this.showNotification(`🌍 Now exploring ${cityNames[selectedCity]}! Let's see what plants live there!`, 'info', 4000);
+    
+    // Call the original function
+    this.currentLocation = selectedCity;
+    this.loadLocationData(selectedCity);
+    
+    // Check for achievements
+    this.checkAchievements();
+};

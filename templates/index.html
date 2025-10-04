@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloomWatch - NASA Earth Observation Plant Bloom Monitor</title>
+    <title>🌱 BloomWatch Kids - Learn About Plants & Nature!</title>
     
     <!-- PWA Meta Tags -->
-    <meta name="description" content="AI-powered global plant bloom monitoring using NASA satellite data">
-    <meta name="theme-color" content="#28a745">
+    <meta name="description" content="Fun educational app for kids to learn about plants, nature, and conservation using real NASA data!">
+    <meta name="theme-color" content="#4CAF50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="BloomWatch">
@@ -24,6 +24,7 @@
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#28a745">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -63,11 +64,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-seedling me-2"></i>BloomWatch
+                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
             </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text" id="currentLocationDisplay">
-                    <i class="fas fa-satellite me-1"></i>Powered by NASA Earth Observation Data
+                    <i class="fas fa-rocket me-1"></i>Powered by NASA Space Data! 🚀
                 </span>
             </div>
         </div>
@@ -79,18 +80,18 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold text-white mb-4">
-                        AI-Powered Plant Bloom Monitoring
+                        🌟 Discover Amazing Plants Around the World! 🌟
                     </h1>
                     <p class="lead text-white mb-4">
-                        Harness NASA's satellite data with cutting-edge AI to predict bloom events, 
-                        detect anomalies, analyze climate correlations, and support global conservation efforts.
+                        Join us on an exciting adventure to learn about plants, flowers, and nature! 
+                        We use real NASA satellite pictures from space to see how plants grow all over our beautiful Earth! 🌍✨
                     </p>
                     <div class="d-flex gap-3">
                         <button class="btn btn-light btn-lg" onclick="scrollToMap()">
-                            <i class="fas fa-globe me-2"></i>Explore Global Map
+                            <i class="fas fa-globe me-2"></i>🌍 Explore the World Map
                         </button>
                         <button class="btn btn-outline-light btn-lg" onclick="scrollToAnalysis()">
-                            <i class="fas fa-chart-line me-2"></i>View Analysis
+                            <i class="fas fa-chart-line me-2"></i>📊 See Plant Data
                         </button>
                     </div>
                 </div>
@@ -99,26 +100,26 @@
                         <div class="row text-center">
                             <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">AI</h3>
-                                    <p class="text-white-50">Predictions</p>
+                                    <h3 class="text-white">🌱</h3>
+                                    <p class="text-white-50">Plants</p>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">3D</h3>
-                                    <p class="text-white-50">Visualization</p>
+                                    <h3 class="text-white">🌍</h3>
+                                    <p class="text-white-50">World Map</p>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">Citizen</h3>
-                                    <p class="text-white-50">Science</p>
+                                    <h3 class="text-white">🚀</h3>
+                                    <p class="text-white-50">NASA Space</p>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="stat-item">
-                                    <h3 class="text-white">NASA</h3>
-                                    <p class="text-white-50">Data</p>
+                                    <h3 class="text-white">🎓</h3>
+                                    <p class="text-white-50">Learning</p>
                                 </div>
                             </div>
                         </div>
@@ -135,111 +136,111 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-cog me-2"></i>Analysis Controls
+                            <i class="fas fa-magic me-2"></i>🎮 Fun Learning Controls
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3">
-                                <label for="citySelect" class="form-label">City</label>
+                                <label for="citySelect" class="form-label">🌍 Choose a Place to Explore!</label>
                                 <select class="form-select" id="citySelect" onchange="updateCity()">
-                                    <option value="global">Global View</option>
-                                    <option value="new-york">New York City</option>
-                                    <option value="london">London</option>
-                                    <option value="tokyo">Tokyo</option>
-                                    <option value="sao-paulo">São Paulo</option>
-                                    <option value="sydney">Sydney</option>
-                                    <option value="cape-town">Cape Town</option>
-                                    <option value="mumbai">Mumbai</option>
-                                    <option value="paris">Paris</option>
-                                    <option value="los-angeles">Los Angeles</option>
-                                    <option value="buenos-aires">Buenos Aires</option>
-                                    <option value="cairo">Cairo</option>
-                                    <option value="moscow">Moscow</option>
+                                    <option value="global">🌍 See the Whole World!</option>
+                                    <option value="new-york">🗽 New York City</option>
+                                    <option value="london">🏰 London</option>
+                                    <option value="tokyo">🗾 Tokyo</option>
+                                    <option value="sao-paulo">🌴 São Paulo</option>
+                                    <option value="sydney">🦘 Sydney</option>
+                                    <option value="cape-town">🏔️ Cape Town</option>
+                                    <option value="mumbai">🕌 Mumbai</option>
+                                    <option value="paris">🗼 Paris</option>
+                                    <option value="los-angeles">🌴 Los Angeles</option>
+                                    <option value="buenos-aires">🌺 Buenos Aires</option>
+                                    <option value="cairo">🏺 Cairo</option>
+                                    <option value="moscow">❄️ Moscow</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="timeRange" class="form-label">Time Range</label>
+                                <label for="timeRange" class="form-label">⏰ How Far Back in Time?</label>
                                 <select class="form-select" id="timeRange" onchange="updateTimeRange()">
-                                    <option value="1">Last Year</option>
-                                    <option value="3">Last 3 Years</option>
-                                    <option value="5" selected>Last 5 Years</option>
-                                    <option value="10">Last 10 Years</option>
+                                    <option value="1">📅 Last Year</option>
+                                    <option value="3">📅 Last 3 Years</option>
+                                    <option value="5" selected>📅 Last 5 Years</option>
+                                    <option value="10">📅 Last 10 Years</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="vegetationIndex" class="form-label">Vegetation Index</label>
+                                <label for="vegetationIndex" class="form-label">🌿 Plant Health Meter</label>
                                 <select class="form-select" id="vegetationIndex" onchange="updateVegetationIndex()">
-                                    <option value="ndvi" selected>NDVI</option>
-                                    <option value="evi">EVI</option>
-                                    <option value="savi">SAVI</option>
-                                    <option value="gndvi">GNDVI</option>
+                                    <option value="ndvi" selected>🌱 Green Plant Health</option>
+                                    <option value="evi">🌿 Enhanced Plant Health</option>
+                                    <option value="savi">🌾 Soil-Adjusted Health</option>
+                                    <option value="gndvi">🌳 Green Leaf Health</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div>
                                     <button class="btn btn-success w-100" onclick="refreshData()">
-                                        <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                                        <i class="fas fa-sync-alt me-2"></i>🔄 Get New Data!
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- AI & Advanced Features Row -->
+                        <!-- Fun Learning Features Row -->
                         <div class="row mt-3">
                             <div class="col-md-3">
                                 <button class="btn btn-primary w-100" onclick="predictBloom()">
-                                    <i class="fas fa-brain me-2"></i>AI Prediction
+                                    <i class="fas fa-crystal-ball me-2"></i>🔮 Predict Plant Growth!
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn btn-warning w-100" onclick="detectAnomalies()">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>Detect Anomalies
+                                    <i class="fas fa-search me-2"></i>🔍 Find Special Plants!
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn btn-info w-100" onclick="analyzeClimate()">
-                                    <i class="fas fa-thermometer-half me-2"></i>Climate Analysis
+                                    <i class="fas fa-thermometer-half me-2"></i>🌡️ Weather & Plants
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn btn-dark w-100" onclick="view3DGlobe()">
-                                    <i class="fas fa-globe me-2"></i>3D Globe
+                                    <i class="fas fa-globe me-2"></i>🌍 3D Earth Explorer
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- Data Export & Sharing Row -->
+                        <!-- Fun Learning Tools Row -->
                         <div class="row mt-3">
                             <div class="col-md-2">
                                 <button class="btn btn-success w-100" onclick="app.exportData('json')">
-                                    <i class="fas fa-download me-2"></i>Export JSON
+                                    <i class="fas fa-download me-2"></i>📄 Save Data
                                 </button>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-info w-100" onclick="app.exportData('csv')">
-                                    <i class="fas fa-file-csv me-2"></i>Export CSV
+                                    <i class="fas fa-file-csv me-2"></i>📊 Save Chart
                                 </button>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-warning w-100" onclick="app.exportData('geojson')">
-                                    <i class="fas fa-map me-2"></i>Export GeoJSON
+                                    <i class="fas fa-map me-2"></i>🗺️ Save Map
                                 </button>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-primary w-100" onclick="app.shareData('link')">
-                                    <i class="fas fa-share me-2"></i>Share Link
+                                    <i class="fas fa-share me-2"></i>📤 Share with Friends!
                                 </button>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-secondary w-100" onclick="toggleRealTimeUpdates()">
-                                    <i class="fas fa-sync-alt me-2" id="realTimeIcon"></i><span id="realTimeText">Real-time ON</span>
+                                    <i class="fas fa-sync-alt me-2" id="realTimeIcon"></i><span id="realTimeText">🔄 Live Updates ON</span>
                                 </button>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-outline-dark w-100" onclick="showAdvancedAnalytics()">
-                                    <i class="fas fa-chart-pie me-2"></i>Analytics
+                                    <i class="fas fa-chart-pie me-2"></i>📈 Fun Stats
                                 </button>
                             </div>
                         </div>
@@ -256,9 +257,9 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-map me-2"></i><span id="mapTitle">Global Bloom Map</span>
+                            <i class="fas fa-map me-2"></i><span id="mapTitle">🌍 Amazing Plant World Map</span>
                         </h5>
-                        <small class="text-muted" id="mapDescription">Click on city markers to view detailed bloom data</small>
+                        <small class="text-muted" id="mapDescription">Click on the colorful dots to learn about plants in different places! 🌱</small>
                     </div>
                     <div class="card-body p-0">
                         <div id="globalMap" style="height: 500px;"></div>
@@ -276,7 +277,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-chart-line me-2"></i>Bloom Intensity Over Time
+                            <i class="fas fa-chart-line me-2"></i>📈 How Plants Grow Over Time!
                         </h5>
                     </div>
                     <div class="card-body">
@@ -290,13 +291,13 @@
                 <div class="card shadow mb-4">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-chart-bar me-2"></i>Key Metrics
+                            <i class="fas fa-chart-bar me-2"></i>📊 Plant Health Scoreboard!
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="metric-item mb-3">
                             <div class="d-flex justify-content-between">
-                                <span>Current Bloom Intensity</span>
+                                <span>🌱 How Green Are the Plants?</span>
                                 <span class="fw-bold" id="currentIntensity">-</span>
                             </div>
                             <div class="progress mt-1">
@@ -306,21 +307,21 @@
                         
                         <div class="metric-item mb-3">
                             <div class="d-flex justify-content-between">
-                                <span>Peak Bloom Date</span>
+                                <span>🌸 Best Blooming Day</span>
                                 <span class="fw-bold" id="peakDate">-</span>
                             </div>
                         </div>
                         
                         <div class="metric-item mb-3">
                             <div class="d-flex justify-content-between">
-                                <span>Trend (5 years)</span>
+                                <span>📈 Are Plants Growing More?</span>
                                 <span class="fw-bold" id="trend">-</span>
                             </div>
                         </div>
                         
                         <div class="metric-item">
                             <div class="d-flex justify-content-between">
-                                <span>Peak Season</span>
+                                <span>🌺 Best Season for Flowers</span>
                                 <span class="fw-bold" id="peakSeason">-</span>
                             </div>
                         </div>
@@ -377,21 +378,21 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-leaf me-2"></i>Conservation Insights & Recommendations
+                            <i class="fas fa-leaf me-2"></i>🌿 Fun Plant Facts & How to Help Nature!
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <h6>Key Insights</h6>
+                                <h6>🌟 Cool Plant Facts!</h6>
                                 <ul id="insightsList" class="list-unstyled">
-                                    <li><i class="fas fa-spinner fa-spin me-2"></i>Loading insights...</li>
+                                    <li><i class="fas fa-spinner fa-spin me-2"></i>Loading fun facts...</li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
-                                <h6>Recommendations</h6>
+                                <h6>🌱 How You Can Help Plants!</h6>
                                 <ul id="recommendationsList" class="list-unstyled">
-                                    <li><i class="fas fa-spinner fa-spin me-2"></i>Loading recommendations...</li>
+                                    <li><i class="fas fa-spinner fa-spin me-2"></i>Loading helpful tips...</li>
                                 </ul>
                             </div>
                         </div>
@@ -406,13 +407,13 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h6>BloomWatch</h6>
-                    <p class="mb-0">Monitoring plant blooms with NASA Earth observation data</p>
+                    <h6>🌱 BloomWatch Kids</h6>
+                    <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">
-                        <i class="fas fa-satellite me-1"></i>
-                        Powered by NASA APIs
+                        <i class="fas fa-rocket me-1"></i>
+                        Powered by NASA Space Data! 🌟
                     </p>
                 </div>
             </div>
@@ -427,8 +428,8 @@
                     <div class="spinner-border text-success mb-3" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h5>Analyzing NASA Data...</h5>
-                    <p class="text-muted">Processing satellite imagery and vegetation indices</p>
+                    <h5>🚀 Getting Data from Space!</h5>
+                    <p class="text-muted">Looking at satellite pictures to see how plants are growing! 🌱</p>
                 </div>
             </div>
         </div>
