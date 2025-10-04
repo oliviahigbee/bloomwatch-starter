@@ -19,6 +19,14 @@ import xgboost as xgb
 import warnings
 warnings.filterwarnings('ignore')
 
+# SerpApi integration
+try:
+    from serpapi import GoogleSearch
+    SERPAPI_AVAILABLE = True
+except ImportError:
+    SERPAPI_AVAILABLE = False
+    print("SerpApi not available. Install with: pip install google-search-results")
+
 # Load environment variables
 load_dotenv()
 
@@ -53,6 +61,9 @@ cache = AdvancedCache()
 
 # NASA API configuration
 NASA_API_KEY = os.getenv('NASA_API_KEY', 'DEMO_KEY')
+
+# SerpApi configuration
+SERPAPI_KEY = os.getenv('SERPAPI_KEY', '')
 EARTHDATA_USERNAME = os.getenv('EARTHDATA_USERNAME', '')
 EARTHDATA_PASSWORD = os.getenv('EARTHDATA_PASSWORD', '')
 
@@ -2446,6 +2457,177 @@ class BloomMonitor:
 # Initialize bloom monitor
 bloom_monitor = BloomMonitor()
 
+# SerpApi Service Class
+class SerpApiService:
+    """Generic SerpApi service for web scraping and data collection"""
+    
+    def __init__(self, api_key=None):
+        self.api_key = api_key or SERPAPI_KEY
+        self.available = SERPAPI_AVAILABLE and bool(self.api_key)
+        
+        # Default search parameters
+        self.default_params = {
+            'api_key': self.api_key,
+            'engine': 'google',
+            'gl': 'us',  # Country
+            'hl': 'en',  # Language
+            'num': 10,   # Number of results
+        }
+        
+        # Supported search engines
+        self.supported_engines = [
+            'google', 'google_images', 'google_shopping', 'google_news',
+            'google_scholar', 'google_maps', 'google_play', 'google_trends',
+            'bing', 'baidu', 'duckduckgo', 'yahoo', 'yandex'
+        ]
+    
+    def is_available(self):
+        """Check if SerpApi is available and configured"""
+        return self.available
+    
+    def search(self, query, engine='google', **kwargs):
+        """
+        Perform a generic search using SerpApi
+        
+        Args:
+            query (str): Search query
+            engine (str): Search engine to use
+            **kwargs: Additional search parameters
+            
+        Returns:
+            dict: Search results or error information
+        """
+        if not self.is_available():
+            return self._generate_demo_data(query, engine, **kwargs)
+        
+        try:
+            # Prepare search parameters
+            params = self.default_params.copy()
+            params.update({
+                'q': query,
+                'engine': engine,
+                **kwargs
+            })
+            
+            # Perform search
+            search = GoogleSearch(params)
+            results = search.get_dict()
+            
+            # Process and standardize results
+            return self._process_results(results, query, engine)
+            
+        except Exception as e:
+            print(f"SerpApi search error: {e}")
+            return self._generate_demo_data(query, engine, **kwargs)
+    
+    def search_organic(self, query, num_results=10, **kwargs):
+        """Search for organic results"""
+        return self.search(query, engine='google', num=num_results, **kwargs)
+    
+    def search_images(self, query, num_results=20, **kwargs):
+        """Search for images"""
+        return self.search(query, engine='google_images', num=num_results, **kwargs)
+    
+    def search_news(self, query, num_results=10, **kwargs):
+        """Search for news articles"""
+        return self.search(query, engine='google_news', num=num_results, **kwargs)
+    
+    def search_scholar(self, query, num_results=10, **kwargs):
+        """Search for academic papers"""
+        return self.search(query, engine='google_scholar', num=num_results, **kwargs)
+    
+    def search_maps(self, query, **kwargs):
+        """Search for local business/places"""
+        return self.search(query, engine='google_maps', **kwargs)
+    
+    def search_trends(self, query, **kwargs):
+        """Search for trending topics"""
+        return self.search(query, engine='google_trends', **kwargs)
+    
+    def _process_results(self, results, query, engine):
+        """Process and standardize SerpApi results"""
+        processed = {
+            'query': query,
+            'engine': engine,
+            'timestamp': datetime.now().isoformat(),
+            'success': True,
+            'data_source': 'SerpApi',
+            'total_results': 0,
+            'results': [],
+            'metadata': {}
+        }
+        
+        # Extract organic results
+        if 'organic_results' in results:
+            processed['results'] = results['organic_results']
+            processed['total_results'] = len(results['organic_results'])
+        
+        # Extract search information
+        if 'search_information' in results:
+            processed['metadata']['search_info'] = results['search_information']
+        
+        # Extract pagination info
+        if 'serpapi_pagination' in results:
+            processed['metadata']['pagination'] = results['serpapi_pagination']
+        
+        # Extract related searches
+        if 'related_searches' in results:
+            processed['metadata']['related_searches'] = results['related_searches']
+        
+        return processed
+    
+    def _generate_demo_data(self, query, engine, **kwargs):
+        """Generate demo data when SerpApi is not available"""
+        demo_results = [
+            {
+                'title': f'Demo Result 1 for "{query}"',
+                'link': 'https://example.com/demo1',
+                'snippet': f'This is a demo result for the search query "{query}". In a real implementation, this would be actual search results from {engine}.',
+                'position': 1
+            },
+            {
+                'title': f'Demo Result 2 for "{query}"',
+                'link': 'https://example.com/demo2',
+                'snippet': f'Another demo result showing how {engine} search results would appear for "{query}".',
+                'position': 2
+            },
+            {
+                'title': f'Demo Result 3 for "{query}"',
+                'link': 'https://example.com/demo3',
+                'snippet': f'Third demo result demonstrating the structure of search results from {engine} for "{query}".',
+                'position': 3
+            }
+        ]
+        
+        return {
+            'query': query,
+            'engine': engine,
+            'timestamp': datetime.now().isoformat(),
+            'success': True,
+            'data_source': 'SerpApi (Demo Mode)',
+            'total_results': len(demo_results),
+            'results': demo_results,
+            'metadata': {
+                'demo_mode': True,
+                'message': 'SerpApi not configured. Install google-search-results and set SERPAPI_KEY environment variable.',
+                'search_info': {
+                    'total_results': 'About 1,000,000 results (demo)',
+                    'time_taken_displayed': '0.45 seconds (demo)'
+                }
+            }
+        }
+    
+    def get_supported_engines(self):
+        """Get list of supported search engines"""
+        return self.supported_engines
+    
+    def validate_engine(self, engine):
+        """Validate if engine is supported"""
+        return engine in self.supported_engines
+
+# Initialize SerpApi service
+serpapi_service = SerpApiService()
+
 @app.route('/')
 def index():
     """Main dashboard page"""
@@ -3184,6 +3366,299 @@ def get_real_time_updates():
         
         return jsonify(updates)
     
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# SerpApi API Endpoints
+@app.route('/api/serpapi/search', methods=['POST'])
+def serpapi_search():
+    """Generic SerpApi search endpoint"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        engine = data.get('engine', 'google')
+        num_results = data.get('num_results', 10)
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        # Validate engine
+        if not serpapi_service.validate_engine(engine):
+            return jsonify({
+                'error': f'Unsupported engine: {engine}',
+                'supported_engines': serpapi_service.get_supported_engines()
+            }), 400
+        
+        # Perform search
+        results = serpapi_service.search(
+            query=query,
+            engine=engine,
+            num=num_results,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-organic', methods=['POST'])
+def serpapi_search_organic():
+    """Search for organic results"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        num_results = data.get('num_results', 10)
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_organic(
+            query=query,
+            num_results=num_results,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-images', methods=['POST'])
+def serpapi_search_images():
+    """Search for images"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        num_results = data.get('num_results', 20)
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_images(
+            query=query,
+            num_results=num_results,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-news', methods=['POST'])
+def serpapi_search_news():
+    """Search for news articles"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        num_results = data.get('num_results', 10)
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_news(
+            query=query,
+            num_results=num_results,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-scholar', methods=['POST'])
+def serpapi_search_scholar():
+    """Search for academic papers"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        num_results = data.get('num_results', 10)
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_scholar(
+            query=query,
+            num_results=num_results,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-maps', methods=['POST'])
+def serpapi_search_maps():
+    """Search for local business/places"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_maps(
+            query=query,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/search-trends', methods=['POST'])
+def serpapi_search_trends():
+    """Search for trending topics"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        additional_params = data.get('params', {})
+        
+        if not query:
+            return jsonify({'error': 'Query parameter is required'}), 400
+        
+        results = serpapi_service.search_trends(
+            query=query,
+            **additional_params
+        )
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/status', methods=['GET'])
+def serpapi_status():
+    """Get SerpApi service status and configuration"""
+    try:
+        status = {
+            'available': serpapi_service.is_available(),
+            'api_key_configured': bool(SERPAPI_KEY),
+            'supported_engines': serpapi_service.get_supported_engines(),
+            'default_params': serpapi_service.default_params,
+            'message': 'SerpApi service is ready' if serpapi_service.is_available() else 'SerpApi not configured. Set SERPAPI_KEY environment variable.'
+        }
+        
+        return jsonify(status)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/demo', methods=['GET'])
+def serpapi_demo():
+    """Get demo search results for testing"""
+    try:
+        demo_queries = [
+            'plant blooming patterns',
+            'NASA satellite vegetation data',
+            'climate change impact on plants',
+            'botanical research papers',
+            'flowering season predictions'
+        ]
+        
+        demo_results = []
+        for query in demo_queries:
+            result = serpapi_service._generate_demo_data(query, 'google')
+            demo_results.append(result)
+        
+        return jsonify({
+            'message': 'Demo search results',
+            'queries': demo_queries,
+            'results': demo_results,
+            'note': 'These are demo results. Configure SerpApi for real search results.'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/agricultural-prices', methods=['POST'])
+def serpapi_agricultural_prices():
+    """Search for agricultural commodity prices"""
+    try:
+        data = request.get_json()
+        commodity = data.get('commodity', 'corn')
+        location = data.get('location', 'United States')
+        additional_params = data.get('params', {})
+        
+        # Build search query for commodity prices
+        query = f"{commodity} crop prices"
+        
+        # Set up parameters for price search
+        search_params = {
+            'location': location,
+            'hl': 'en',
+            'gl': 'us',
+            'google_domain': 'google.com',
+            **additional_params
+        }
+        
+        # Perform search
+        results = serpapi_service.search(
+            query=query,
+            engine='google',
+            num=10,
+            **search_params
+        )
+        
+        # Add agricultural-specific metadata
+        results['search_type'] = 'agricultural_prices'
+        results['commodity'] = commodity
+        results['location'] = location
+        results['serpapi_url'] = f"https://serpapi.com/search.json?q={query.replace(' ', '+')}&location={location.replace(' ', '+')}&hl=en&gl=us&google_domain=google.com"
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/serpapi/corn-prices', methods=['GET', 'POST'])
+def serpapi_corn_prices():
+    """Specialized endpoint for corn crop prices"""
+    try:
+        if request.method == 'GET':
+            # Default corn prices search
+            query = "corn crop prices"
+            location = "United States"
+        else:
+            # POST with custom parameters
+            data = request.get_json() or {}
+            query = data.get('query', 'corn crop prices')
+            location = data.get('location', 'United States')
+        
+        # Set up parameters matching your SerpApi URL
+        search_params = {
+            'location': location,
+            'hl': 'en',
+            'gl': 'us',
+            'google_domain': 'google.com'
+        }
+        
+        # Perform search
+        results = serpapi_service.search(
+            query=query,
+            engine='google',
+            num=10,
+            **search_params
+        )
+        
+        # Add corn-specific metadata
+        results['search_type'] = 'corn_prices'
+        results['commodity'] = 'corn'
+        results['location'] = location
+        results['serpapi_url'] = f"https://serpapi.com/search.json?q={query.replace(' ', '+')}&location={location.replace(' ', '+')}&hl=en&gl=us&google_domain=google.com"
+        
+        return jsonify(results)
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -377,6 +377,18 @@ class BloomWatchApp {
             });
         };
         
+        window.scrollToSerpApi = () => {
+            document.getElementById('serpapiSection').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        };
+        
+        window.scrollToAgriculturalPrices = () => {
+            document.getElementById('agriculturalPricesSection').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        };
+        
         // Global functions for form controls
         window.updateCity = () => {
             this.currentCity = document.getElementById('citySelect').value;
@@ -3092,3 +3104,552 @@ class Globe3D {
         window.removeEventListener('resize', this.onWindowResize);
     }
 }
+
+// SerpApi Integration
+class SerpApiManager {
+    constructor() {
+        this.status = null;
+        this.init();
+    }
+
+    async init() {
+        await this.checkStatus();
+        this.setupEventListeners();
+    }
+
+    async checkStatus() {
+        try {
+            const response = await fetch('/api/serpapi/status');
+            this.status = await response.json();
+            this.updateStatusDisplay();
+        } catch (error) {
+            console.error('Failed to check SerpApi status:', error);
+            this.updateStatusDisplay('error', 'Failed to check SerpApi status');
+        }
+    }
+
+    updateStatusDisplay(type = null, message = null) {
+        const statusElement = document.getElementById('serpapiStatus');
+        const statusText = document.getElementById('serpapiStatusText');
+
+        if (type === 'error') {
+            statusElement.className = 'alert alert-danger';
+            statusText.textContent = message || 'SerpApi service error';
+            return;
+        }
+
+        if (this.status) {
+            if (this.status.available) {
+                statusElement.className = 'alert alert-success';
+                statusText.textContent = 'SerpApi service is ready and configured';
+            } else {
+                statusElement.className = 'alert alert-warning';
+                statusText.textContent = this.status.message || 'SerpApi not configured';
+            }
+        } else {
+            statusElement.className = 'alert alert-info';
+            statusText.textContent = 'Checking SerpApi status...';
+        }
+    }
+
+    setupEventListeners() {
+        const form = document.getElementById('serpapiSearchForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.performSearch();
+            });
+        }
+    }
+
+    async performSearch() {
+        const query = document.getElementById('searchQuery').value.trim();
+        const engine = document.getElementById('searchEngine').value;
+        const numResults = parseInt(document.getElementById('numResults').value);
+
+        if (!query) {
+            alert('Please enter a search query');
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            const response = await fetch('/api/serpapi/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    engine: engine,
+                    num_results: numResults
+                })
+            });
+
+            const results = await response.json();
+
+            if (response.ok) {
+                this.displayResults(results);
+            } else {
+                throw new Error(results.error || 'Search failed');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            this.showError('Search failed: ' + error.message);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async loadDemoResults() {
+        this.showLoading(true);
+
+        try {
+            const response = await fetch('/api/serpapi/demo');
+            const data = await response.json();
+
+            if (response.ok) {
+                this.displayDemoResults(data);
+            } else {
+                throw new Error(data.error || 'Failed to load demo results');
+            }
+        } catch (error) {
+            console.error('Demo load error:', error);
+            this.showError('Failed to load demo results: ' + error.message);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    displayResults(results) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsSection = document.getElementById('serpapiResults');
+
+        if (!results.results || results.results.length === 0) {
+            resultsContainer.innerHTML = '<div class="alert alert-info">No results found for your search.</div>';
+            resultsCount.textContent = '0';
+        } else {
+            resultsContainer.innerHTML = this.buildResultsHTML(results);
+            resultsCount.textContent = results.total_results || results.results.length;
+        }
+
+        resultsSection.style.display = 'block';
+    }
+
+    displayDemoResults(data) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsSection = document.getElementById('serpapiResults');
+
+        let html = '<div class="alert alert-info mb-3">';
+        html += '<i class="fas fa-info-circle me-2"></i>';
+        html += data.note || 'These are demo results. Configure SerpApi for real search results.';
+        html += '</div>';
+
+        if (data.results && data.results.length > 0) {
+            data.results.forEach((result, index) => {
+                html += this.buildResultHTML(result, index);
+            });
+        }
+
+        resultsContainer.innerHTML = html;
+        resultsCount.textContent = data.results ? data.results.length : 0;
+        resultsSection.style.display = 'block';
+    }
+
+    buildResultsHTML(results) {
+        let html = '';
+
+        // Add metadata if available
+        if (results.metadata && results.metadata.search_info) {
+            html += '<div class="alert alert-light mb-3">';
+            html += '<small class="text-muted">';
+            html += `<strong>Search Info:</strong> ${results.metadata.search_info.total_results || 'N/A'} `;
+            html += `(${results.metadata.search_info.time_taken_displayed || 'N/A'})`;
+            html += '</small>';
+            html += '</div>';
+        }
+
+        // Add results
+        if (results.results && results.results.length > 0) {
+            results.results.forEach((result, index) => {
+                html += this.buildResultHTML(result, index);
+            });
+        }
+
+        return html;
+    }
+
+    buildResultHTML(result, index) {
+        const position = result.position || index + 1;
+        const title = result.title || 'No title';
+        const link = result.link || '#';
+        const snippet = result.snippet || 'No description available';
+        const source = this.extractDomain(link);
+
+        let html = '<div class="card mb-3">';
+        html += '<div class="card-body">';
+        html += `<div class="d-flex justify-content-between align-items-start mb-2">`;
+        html += `<h6 class="card-title mb-0">`;
+        html += `<a href="${link}" target="_blank" class="text-decoration-none">${title}</a>`;
+        html += `</h6>`;
+        html += `<span class="badge bg-secondary">#${position}</span>`;
+        html += `</div>`;
+        html += `<p class="card-text text-muted">${snippet}</p>`;
+        html += `<div class="d-flex justify-content-between align-items-center">`;
+        html += `<small class="text-muted">`;
+        html += `<i class="fas fa-external-link-alt me-1"></i>${source}`;
+        html += `</small>`;
+        html += `<a href="${link}" target="_blank" class="btn btn-sm btn-outline-primary">`;
+        html += `<i class="fas fa-external-link-alt me-1"></i>Visit`;
+        html += `</a>`;
+        html += `</div>`;
+        html += '</div>';
+        html += '</div>';
+
+        return html;
+    }
+
+    extractDomain(url) {
+        try {
+            const domain = new URL(url).hostname;
+            return domain.replace('www.', '');
+        } catch (e) {
+            return 'Unknown source';
+        }
+    }
+
+    showLoading(show) {
+        const loadingElement = document.getElementById('serpapiLoading');
+        if (loadingElement) {
+            loadingElement.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    showError(message) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsSection = document.getElementById('serpapiResults');
+        
+        resultsContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+        resultsSection.style.display = 'block';
+    }
+
+    clearResults() {
+        const resultsSection = document.getElementById('serpapiResults');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        
+        if (resultsSection) resultsSection.style.display = 'none';
+        if (resultsContainer) resultsContainer.innerHTML = '';
+        if (resultsCount) resultsCount.textContent = '0';
+    }
+}
+
+// Global functions for HTML onclick handlers
+function setExampleQuery(query) {
+    const queryInput = document.getElementById('searchQuery');
+    if (queryInput) {
+        queryInput.value = query;
+    }
+}
+
+function loadDemoResults() {
+    if (window.serpapiManager) {
+        window.serpapiManager.loadDemoResults();
+    }
+}
+
+function clearResults() {
+    if (window.serpapiManager) {
+        window.serpapiManager.clearResults();
+    }
+}
+
+// Agricultural Prices Manager
+class AgriculturalPricesManager {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        const form = document.getElementById('agriculturalSearchForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.performAgriculturalSearch();
+            });
+        }
+    }
+
+    async searchCornPrices() {
+        this.showAgriculturalLoading(true);
+
+        try {
+            const response = await fetch('/api/serpapi/corn-prices', {
+                method: 'GET'
+            });
+
+            const results = await response.json();
+
+            if (response.ok) {
+                this.displayAgriculturalResults(results);
+            } else {
+                throw new Error(results.error || 'Corn prices search failed');
+            }
+        } catch (error) {
+            console.error('Corn prices search error:', error);
+            this.showAgriculturalError('Corn prices search failed: ' + error.message);
+        } finally {
+            this.showAgriculturalLoading(false);
+        }
+    }
+
+    async searchCornPricesDemo() {
+        this.showAgriculturalLoading(true);
+
+        try {
+            // Generate demo corn prices data
+            const demoResults = {
+                query: 'corn crop prices',
+                engine: 'google',
+                timestamp: new Date().toISOString(),
+                success: true,
+                data_source: 'SerpApi (Demo Mode)',
+                total_results: 3,
+                search_type: 'corn_prices',
+                commodity: 'corn',
+                location: 'United States',
+                serpapi_url: 'https://serpapi.com/search.json?q=corn+crop+prices&location=United+States&hl=en&gl=us&google_domain=google.com',
+                results: [
+                    {
+                        title: 'Corn Futures Prices - CBOT Corn Price Chart',
+                        link: 'https://www.investing.com/commodities/corn',
+                        snippet: 'Get live corn futures prices and charts. Track CBOT corn prices, historical data, and market analysis for corn commodity trading.',
+                        position: 1
+                    },
+                    {
+                        title: 'USDA Corn Price Reports - Agricultural Marketing Service',
+                        link: 'https://www.ams.usda.gov/market-news/corn',
+                        snippet: 'Current corn prices and market reports from USDA. Daily corn price updates, regional pricing, and agricultural market trends.',
+                        position: 2
+                    },
+                    {
+                        title: 'Corn Market Prices - Farm Progress',
+                        link: 'https://www.farmprogress.com/corn-prices',
+                        snippet: 'Latest corn market prices and analysis. Track corn futures, cash prices, and market outlook for corn producers and traders.',
+                        position: 3
+                    }
+                ],
+                metadata: {
+                    demo_mode: true,
+                    message: 'Demo corn prices data. Configure SerpApi for real-time prices.',
+                    search_info: {
+                        total_results: 'About 2,500,000 results (demo)',
+                        time_taken_displayed: '0.32 seconds (demo)'
+                    }
+                }
+            };
+
+            this.displayAgriculturalResults(demoResults);
+        } catch (error) {
+            console.error('Demo corn prices error:', error);
+            this.showAgriculturalError('Demo corn prices failed: ' + error.message);
+        } finally {
+            this.showAgriculturalLoading(false);
+        }
+    }
+
+    async performAgriculturalSearch() {
+        const commodity = document.getElementById('commoditySelect').value;
+        const location = document.getElementById('priceLocation').value;
+        const priceType = document.getElementById('priceType').value;
+
+        this.showAgriculturalLoading(true);
+
+        try {
+            const response = await fetch('/api/serpapi/agricultural-prices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    commodity: commodity,
+                    location: location,
+                    params: {
+                        price_type: priceType
+                    }
+                })
+            });
+
+            const results = await response.json();
+
+            if (response.ok) {
+                this.displayAgriculturalResults(results);
+            } else {
+                throw new Error(results.error || 'Agricultural search failed');
+            }
+        } catch (error) {
+            console.error('Agricultural search error:', error);
+            this.showAgriculturalError('Agricultural search failed: ' + error.message);
+        } finally {
+            this.showAgriculturalLoading(false);
+        }
+    }
+
+    displayAgriculturalResults(results) {
+        const resultsContainer = document.getElementById('agriculturalResultsContainer');
+        const resultsCount = document.getElementById('agriculturalResultsCount');
+        const resultsSection = document.getElementById('agriculturalResults');
+
+        if (!results.results || results.results.length === 0) {
+            resultsContainer.innerHTML = '<div class="alert alert-info">No price data found for your search.</div>';
+            resultsCount.textContent = '0';
+        } else {
+            resultsContainer.innerHTML = this.buildAgriculturalResultsHTML(results);
+            resultsCount.textContent = results.total_results || results.results.length;
+        }
+
+        resultsSection.style.display = 'block';
+    }
+
+    buildAgriculturalResultsHTML(results) {
+        let html = '';
+
+        // Add search metadata
+        html += '<div class="alert alert-light mb-3">';
+        html += '<div class="row">';
+        html += '<div class="col-md-6">';
+        html += `<strong>Commodity:</strong> ${results.commodity || 'N/A'}<br>`;
+        html += `<strong>Location:</strong> ${results.location || 'N/A'}<br>`;
+        html += `<strong>Search Type:</strong> ${results.search_type || 'N/A'}`;
+        html += '</div>';
+        html += '<div class="col-md-6">';
+        if (results.serpapi_url) {
+            html += `<strong>SerpApi URL:</strong><br>`;
+            html += `<small><a href="${results.serpapi_url}" target="_blank" class="text-break">${results.serpapi_url}</a></small>`;
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+
+        // Add demo mode notice if applicable
+        if (results.metadata && results.metadata.demo_mode) {
+            html += '<div class="alert alert-info mb-3">';
+            html += '<i class="fas fa-info-circle me-2"></i>';
+            html += results.metadata.message || 'Demo mode - configure SerpApi for real data';
+            html += '</div>';
+        }
+
+        // Add results
+        if (results.results && results.results.length > 0) {
+            results.results.forEach((result, index) => {
+                html += this.buildAgriculturalResultHTML(result, index);
+            });
+        }
+
+        return html;
+    }
+
+    buildAgriculturalResultHTML(result, index) {
+        const position = result.position || index + 1;
+        const title = result.title || 'No title';
+        const link = result.link || '#';
+        const snippet = result.snippet || 'No description available';
+        const source = this.extractDomain(link);
+
+        let html = '<div class="card mb-3 border-success">';
+        html += '<div class="card-body">';
+        html += `<div class="d-flex justify-content-between align-items-start mb-2">`;
+        html += `<h6 class="card-title mb-0 text-success">`;
+        html += `<a href="${link}" target="_blank" class="text-decoration-none">${title}</a>`;
+        html += `</h6>`;
+        html += `<span class="badge bg-success">#${position}</span>`;
+        html += `</div>`;
+        html += `<p class="card-text text-muted">${snippet}</p>`;
+        html += `<div class="d-flex justify-content-between align-items-center">`;
+        html += `<small class="text-muted">`;
+        html += `<i class="fas fa-external-link-alt me-1"></i>${source}`;
+        html += `</small>`;
+        html += `<a href="${link}" target="_blank" class="btn btn-sm btn-success">`;
+        html += `<i class="fas fa-chart-line me-1"></i>View Prices`;
+        html += `</a>`;
+        html += `</div>`;
+        html += '</div>';
+        html += '</div>';
+
+        return html;
+    }
+
+    extractDomain(url) {
+        try {
+            const domain = new URL(url).hostname;
+            return domain.replace('www.', '');
+        } catch (e) {
+            return 'Unknown source';
+        }
+    }
+
+    showAgriculturalLoading(show) {
+        const loadingElement = document.getElementById('agriculturalLoading');
+        if (loadingElement) {
+            loadingElement.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    showAgriculturalError(message) {
+        const resultsContainer = document.getElementById('agriculturalResultsContainer');
+        const resultsSection = document.getElementById('agriculturalResults');
+        
+        resultsContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+        resultsSection.style.display = 'block';
+    }
+
+    clearAgriculturalResults() {
+        const resultsSection = document.getElementById('agriculturalResults');
+        const resultsContainer = document.getElementById('agriculturalResultsContainer');
+        const resultsCount = document.getElementById('agriculturalResultsCount');
+        
+        if (resultsSection) resultsSection.style.display = 'none';
+        if (resultsContainer) resultsContainer.innerHTML = '';
+        if (resultsCount) resultsCount.textContent = '0';
+    }
+}
+
+// Global functions for agricultural prices
+function searchCornPrices() {
+    if (window.agriculturalPricesManager) {
+        window.agriculturalPricesManager.searchCornPrices();
+    }
+}
+
+function searchCornPricesDemo() {
+    if (window.agriculturalPricesManager) {
+        window.agriculturalPricesManager.searchCornPricesDemo();
+    }
+}
+
+function setCommodityExample(commodity, location) {
+    const commoditySelect = document.getElementById('commoditySelect');
+    const locationSelect = document.getElementById('priceLocation');
+    
+    if (commoditySelect) commoditySelect.value = commodity;
+    if (locationSelect) locationSelect.value = location;
+}
+
+function clearAgriculturalResults() {
+    if (window.agriculturalPricesManager) {
+        window.agriculturalPricesManager.clearAgriculturalResults();
+    }
+}
+
+// Initialize SerpApi manager when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    window.serpapiManager = new SerpApiManager();
+    window.agriculturalPricesManager = new AgriculturalPricesManager();
+});

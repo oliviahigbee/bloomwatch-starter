@@ -85,12 +85,18 @@
                         Harness NASA's satellite data with cutting-edge AI to predict bloom events, 
                         detect anomalies, analyze climate correlations, and support global conservation efforts.
                     </p>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex gap-3 flex-wrap">
                         <button class="btn btn-light btn-lg" onclick="scrollToMap()">
                             <i class="fas fa-globe me-2"></i>Explore Global Map
                         </button>
                         <button class="btn btn-outline-light btn-lg" onclick="scrollToAnalysis()">
                             <i class="fas fa-chart-line me-2"></i>View Analysis
+                        </button>
+                        <button class="btn btn-outline-light btn-lg" onclick="scrollToSerpApi()">
+                            <i class="fas fa-search me-2"></i>Web Scraping
+                        </button>
+                        <button class="btn btn-outline-light btn-lg" onclick="scrollToAgriculturalPrices()">
+                            <i class="fas fa-seedling me-2"></i>Crop Prices
                         </button>
                     </div>
                 </div>
@@ -394,6 +400,260 @@
                                     <li><i class="fas fa-spinner fa-spin me-2"></i>Loading recommendations...</li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SerpApi Web Scraping Section -->
+    <div class="container my-5" id="serpapiSection">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i>Web Scraping & Data Collection
+                        </h5>
+                        <small class="text-muted">Search and collect data from various web sources using SerpApi</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- SerpApi Status -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="serpapiStatus">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <span id="serpapiStatusText">Checking SerpApi status...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Form -->
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <form id="serpapiSearchForm">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="searchQuery" class="form-label">Search Query</label>
+                                            <input type="text" class="form-control" id="searchQuery" 
+                                                   placeholder="e.g., plant blooming patterns, NASA vegetation data" required>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="searchEngine" class="form-label">Search Engine</label>
+                                            <select class="form-select" id="searchEngine">
+                                                <option value="google">Google</option>
+                                                <option value="google_images">Google Images</option>
+                                                <option value="google_news">Google News</option>
+                                                <option value="google_scholar">Google Scholar</option>
+                                                <option value="google_maps">Google Maps</option>
+                                                <option value="google_trends">Google Trends</option>
+                                                <option value="bing">Bing</option>
+                                                <option value="yahoo">Yahoo</option>
+                                                <option value="duckduckgo">DuckDuckGo</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="numResults" class="form-label">Results</label>
+                                            <select class="form-select" id="numResults">
+                                                <option value="5">5 results</option>
+                                                <option value="10" selected>10 results</option>
+                                                <option value="20">20 results</option>
+                                                <option value="50">50 results</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-success me-2">
+                                                <i class="fas fa-search me-2"></i>Search
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="loadDemoResults()">
+                                                <i class="fas fa-play me-2"></i>Load Demo
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info" onclick="clearResults()">
+                                                <i class="fas fa-trash me-2"></i>Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-lightbulb me-2"></i>Quick Examples
+                                        </h6>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setExampleQuery('plant blooming patterns')">
+                                                Plant Blooming Patterns
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setExampleQuery('NASA satellite vegetation data')">
+                                                NASA Vegetation Data
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setExampleQuery('climate change impact on plants')">
+                                                Climate Change Impact
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setExampleQuery('botanical research papers')">
+                                                Botanical Research
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loading Indicator -->
+                        <div class="text-center mt-4" id="serpapiLoading" style="display: none;">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Searching...</span>
+                            </div>
+                            <p class="mt-2">Searching web sources...</p>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="serpapiResults" class="mt-4" style="display: none;">
+                            <h6 class="mb-3">
+                                <i class="fas fa-list me-2"></i>Search Results
+                                <span class="badge bg-success ms-2" id="resultsCount">0</span>
+                            </h6>
+                            <div id="resultsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agricultural Commodity Prices Section -->
+    <div class="container my-5" id="agriculturalPricesSection">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-seedling me-2"></i>Agricultural Commodity Prices
+                        </h5>
+                        <small class="text-muted">Search for current crop prices and agricultural market data</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Quick Corn Prices Button -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-success">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-corn me-2"></i>Quick Corn Prices Search
+                                    </h6>
+                                    <p class="mb-3">Get current corn crop prices for the United States</p>
+                                    <button class="btn btn-success" onclick="searchCornPrices()">
+                                        <i class="fas fa-search me-2"></i>Get Corn Prices
+                                    </button>
+                                    <button class="btn btn-outline-success ms-2" onclick="searchCornPricesDemo()">
+                                        <i class="fas fa-play me-2"></i>Demo Corn Prices
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agricultural Search Form -->
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <form id="agriculturalSearchForm">
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="commoditySelect" class="form-label">Commodity</label>
+                                            <select class="form-select" id="commoditySelect">
+                                                <option value="corn">Corn</option>
+                                                <option value="wheat">Wheat</option>
+                                                <option value="soybeans">Soybeans</option>
+                                                <option value="rice">Rice</option>
+                                                <option value="cotton">Cotton</option>
+                                                <option value="sugar">Sugar</option>
+                                                <option value="coffee">Coffee</option>
+                                                <option value="cocoa">Cocoa</option>
+                                                <option value="barley">Barley</option>
+                                                <option value="oats">Oats</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="priceLocation" class="form-label">Location</label>
+                                            <select class="form-select" id="priceLocation">
+                                                <option value="United States">United States</option>
+                                                <option value="Canada">Canada</option>
+                                                <option value="Mexico">Mexico</option>
+                                                <option value="Brazil">Brazil</option>
+                                                <option value="Argentina">Argentina</option>
+                                                <option value="China">China</option>
+                                                <option value="India">India</option>
+                                                <option value="European Union">European Union</option>
+                                                <option value="Australia">Australia</option>
+                                                <option value="Russia">Russia</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="priceType" class="form-label">Price Type</label>
+                                            <select class="form-select" id="priceType">
+                                                <option value="crop prices">Crop Prices</option>
+                                                <option value="futures prices">Futures Prices</option>
+                                                <option value="spot prices">Spot Prices</option>
+                                                <option value="market prices">Market Prices</option>
+                                                <option value="commodity prices">Commodity Prices</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-success me-2">
+                                                <i class="fas fa-chart-line me-2"></i>Search Prices
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="clearAgriculturalResults()">
+                                                <i class="fas fa-trash me-2"></i>Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-info-circle me-2"></i>Price Search Info
+                                        </h6>
+                                        <p class="card-text small">
+                                            Search for current agricultural commodity prices using real-time market data. 
+                                            Results include price information, market trends, and related news.
+                                        </p>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setCommodityExample('corn', 'United States')">
+                                                Corn Prices (US)
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setCommodityExample('wheat', 'United States')">
+                                                Wheat Prices (US)
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="setCommodityExample('soybeans', 'Brazil')">
+                                                Soybeans (Brazil)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loading Indicator -->
+                        <div class="text-center mt-4" id="agriculturalLoading" style="display: none;">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Searching prices...</span>
+                            </div>
+                            <p class="mt-2">Searching agricultural price data...</p>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="agriculturalResults" class="mt-4" style="display: none;">
+                            <h6 class="mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Price Search Results
+                                <span class="badge bg-success ms-2" id="agriculturalResultsCount">0</span>
+                            </h6>
+                            <div id="agriculturalResultsContainer"></div>
                         </div>
                     </div>
                 </div>

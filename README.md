@@ -51,6 +51,13 @@ BloomWatch is a revolutionary AI-powered platform that harnesses NASA's satellit
 - **NASA POWER API**: Climate data (temperature, precipitation, solar radiation)
 - **Multi-Sensor Fusion**: Real-time data from multiple NASA missions
 
+### 🔍 Web Scraping & Data Collection
+- **SerpApi Integration**: Generic web scraping capabilities for research and data collection
+- **Multiple Search Engines**: Google, Bing, Yahoo, DuckDuckGo, and more
+- **Specialized Searches**: Images, news, academic papers, maps, and trends
+- **Demo Mode**: Fully functional with demo data when SerpApi is not configured
+- **Flexible Configuration**: Easy to customize for specific scraping goals
+
 ## Technical Architecture
 
 ### Backend (Flask)
@@ -99,6 +106,13 @@ pip install -r requirements.txt
 ```bash
 # Create .env file
 echo "NASA_API_KEY=your_nasa_api_key_here" > .env
+echo "SERPAPI_KEY=your_serpapi_key_here" >> .env
+```
+
+   Or copy the example file:
+```bash
+cp .env.example .env
+# Edit .env with your actual API keys
 ```
 
 5. Run the application:
@@ -130,6 +144,13 @@ http://localhost:5000
 - Understand ecological implications of bloom events
 - Access management strategies for different scenarios
 - Coordinate with local conservation efforts
+
+### Web Scraping & Data Collection
+- **Search Interface**: Use the built-in web scraping interface to search for research data
+- **Multiple Engines**: Choose from Google, Bing, Yahoo, DuckDuckGo, and specialized engines
+- **Demo Mode**: Test functionality with demo data without API configuration
+- **API Access**: Use RESTful endpoints for programmatic access
+- **Customizable**: Easy to adapt for specific research or data collection goals
 
 ## NASA Data Sources
 
@@ -164,6 +185,106 @@ http://localhost:5000
 - **Allergy Management**: Early warning systems for allergy sufferers
 - **Air Quality**: Vegetation impact on atmospheric conditions
 - **Disease Vector Monitoring**: Track vegetation changes affecting disease vectors
+
+## SerpApi Integration
+
+### Getting Started with SerpApi
+
+1. **Get a SerpApi Key**: Sign up at [serpapi.com](https://serpapi.com) to get your API key
+2. **Configure Environment**: Add your API key to the `.env` file:
+   ```bash
+   SERPAPI_KEY=your_serpapi_key_here
+   ```
+3. **Test the Integration**: Use the demo mode or test with real searches
+
+### API Endpoints
+
+#### Generic Search
+```bash
+POST /api/serpapi/search
+Content-Type: application/json
+
+{
+  "query": "plant blooming patterns",
+  "engine": "google",
+  "num_results": 10,
+  "params": {
+    "gl": "us",
+    "hl": "en"
+  }
+}
+```
+
+#### Specialized Searches
+- **Organic Results**: `POST /api/serpapi/search-organic`
+- **Images**: `POST /api/serpapi/search-images`
+- **News**: `POST /api/serpapi/search-news`
+- **Academic Papers**: `POST /api/serpapi/search-scholar`
+- **Maps**: `POST /api/serpapi/search-maps`
+- **Trends**: `POST /api/serpapi/search-trends`
+
+#### Service Status
+```bash
+GET /api/serpapi/status
+```
+
+#### Demo Data
+```bash
+GET /api/serpapi/demo
+```
+
+### Supported Search Engines
+- `google` - Standard Google search
+- `google_images` - Google Images
+- `google_news` - Google News
+- `google_scholar` - Google Scholar (academic papers)
+- `google_maps` - Google Maps
+- `google_trends` - Google Trends
+- `bing` - Microsoft Bing
+- `yahoo` - Yahoo Search
+- `duckduckgo` - DuckDuckGo
+
+### Example Usage
+
+#### Python Example
+```python
+import requests
+
+# Search for botanical research
+response = requests.post('http://localhost:5001/api/serpapi/search', 
+    json={
+        'query': 'botanical research papers',
+        'engine': 'google_scholar',
+        'num_results': 5
+    }
+)
+
+results = response.json()
+print(f"Found {results['total_results']} results")
+```
+
+#### JavaScript Example
+```javascript
+// Search for plant images
+const response = await fetch('/api/serpapi/search-images', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        query: 'flowering plants',
+        num_results: 20
+    })
+});
+
+const results = await response.json();
+console.log('Image results:', results.results);
+```
+
+### Demo Mode
+When SerpApi is not configured, the system automatically falls back to demo mode with realistic sample data. This allows you to:
+- Test the interface and functionality
+- Develop and integrate without API costs
+- Demonstrate capabilities to stakeholders
+- Use as a template for custom implementations
 
 ## Future Enhancements
 
