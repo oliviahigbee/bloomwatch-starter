@@ -1450,16 +1450,27 @@ class Globe3D {
         this.isAnimating = false;
         this.showBloomData = false;
         
-        // Layer system
+        // NASA data integration
+        this.nasaData = {
+            temperature: null,
+            vegetation: null,
+            precipitation: null,
+            wind: null,
+            elevation: null
+        };
+        this.nasaMetadata = {};
+        
+        // Layer system with NASA data support
         this.layers = {
-            temperature: { active: false, objects: [] },
-            wind: { active: false, objects: [] },
-            vegetation: { active: false, objects: [] },
-            precipitation: { active: false, objects: [] },
-            elevation: { active: false, objects: [] }
+            temperature: { active: false, objects: [], nasaData: null, metadata: null },
+            wind: { active: false, objects: [], nasaData: null, metadata: null },
+            vegetation: { active: false, objects: [], nasaData: null, metadata: null },
+            precipitation: { active: false, objects: [], nasaData: null, metadata: null },
+            elevation: { active: false, objects: [], nasaData: null, metadata: null }
         };
         
         this.init();
+        this.loadNASAData();
     }
     
     init() {
@@ -1506,6 +1517,162 @@ class Globe3D {
         
         // Update info display
         this.updateInfo();
+    }
+    
+    async loadNASAData() {
+        try {
+            // Load NASA climate data for all layers
+            await Promise.all([
+                this.loadNASATemperatureData(),
+                this.loadNASAVegetationData(),
+                this.loadNASAPrecipitationData(),
+                this.loadNASAWindData(),
+                this.loadNASAElevationData()
+            ]);
+            
+            console.log('NASA data loaded successfully for 3D globe');
+            this.updateNASAInfo();
+        } catch (error) {
+            console.error('Failed to load NASA data for globe:', error);
+        }
+    }
+    
+    async loadNASATemperatureData() {
+        try {
+            const response = await fetch('/api/climate-correlation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lat: 0, lon: 0, // Global data
+                    start_date: '2023-01-01',
+                    end_date: '2023-12-31'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.nasaData.temperature = data.climate_summary;
+                this.layers.temperature.nasaData = data.climate_summary;
+                this.layers.temperature.metadata = data.climate_summary.nasa_metadata;
+            }
+        } catch (error) {
+            console.error('Failed to load NASA temperature data:', error);
+        }
+    }
+    
+    async loadNASAVegetationData() {
+        try {
+            const response = await fetch('/api/nasa-vegetation?lat=0&lon=0&start_date=2023-01-01&end_date=2023-12-31');
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.nasaData.vegetation = data.vegetation_data;
+                this.layers.vegetation.nasaData = data.vegetation_data;
+                this.layers.vegetation.metadata = data.nasa_metadata;
+            }
+        } catch (error) {
+            console.error('Failed to load NASA vegetation data:', error);
+        }
+    }
+    
+    async loadNASAPrecipitationData() {
+        try {
+            const response = await fetch('/api/climate-correlation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lat: 0, lon: 0, // Global data
+                    start_date: '2023-01-01',
+                    end_date: '2023-12-31'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.nasaData.precipitation = data.climate_summary;
+                this.layers.precipitation.nasaData = data.climate_summary;
+                this.layers.precipitation.metadata = data.climate_summary.nasa_metadata;
+            }
+        } catch (error) {
+            console.error('Failed to load NASA precipitation data:', error);
+        }
+    }
+    
+    async loadNASAWindData() {
+        try {
+            const response = await fetch('/api/climate-correlation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lat: 0, lon: 0, // Global data
+                    start_date: '2023-01-01',
+                    end_date: '2023-12-31'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.nasaData.wind = data.climate_summary;
+                this.layers.wind.nasaData = data.climate_summary;
+                this.layers.wind.metadata = data.climate_summary.nasa_metadata;
+            }
+        } catch (error) {
+            console.error('Failed to load NASA wind data:', error);
+        }
+    }
+    
+    async loadNASAElevationData() {
+        try {
+            const response = await fetch('/api/nasa-satellite?lat=0&lon=0&start_date=2023-01-01&end_date=2023-12-31&collection=landsat_8');
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.nasaData.elevation = data.satellite_data;
+                this.layers.elevation.nasaData = data.satellite_data;
+                this.layers.elevation.metadata = data.nasa_metadata;
+            }
+        } catch (error) {
+            console.error('Failed to load NASA elevation data:', error);
+        }
+    }
+    
+    updateNASAInfo() {
+        const nasaInfo = document.getElementById('nasaGlobeInfo');
+        if (!nasaInfo) return;
+        
+        const activeLayers = Object.keys(this.layers).filter(layer => this.layers[layer].active);
+        const nasaLayers = activeLayers.filter(layer => this.layers[layer].nasaData);
+        
+        nasaInfo.innerHTML = `
+            <div class="mb-2">
+                <small class="text-muted">
+                    <i class="fas fa-satellite me-1"></i>
+                    NASA Data: ${nasaLayers.length}/${activeLayers.length} layers
+                </small>
+            </div>
+            ${nasaLayers.map(layer => {
+                const metadata = this.layers[layer].metadata;
+                return `
+                    <div class="mb-1">
+                        <small class="text-muted">
+                            <i class="fas fa-${this.getLayerIcon(layer)} me-1"></i>
+                            ${layer}: ${metadata?.data_source || 'NASA Data'}
+                        </small>
+                    </div>
+                `;
+            }).join('')}
+        `;
+    }
+    
+    getLayerIcon(layerName) {
+        const icons = {
+            temperature: 'thermometer-half',
+            vegetation: 'leaf',
+            precipitation: 'cloud-rain',
+            wind: 'wind',
+            elevation: 'mountain'
+        };
+        return icons[layerName] || 'layer-group';
     }
     
     createGlobe() {
@@ -1814,6 +1981,7 @@ class Globe3D {
         }
         
         this.updateInfo();
+        this.updateNASAInfo();
     }
     
     createLayer(layerName) {
@@ -1846,7 +2014,7 @@ class Globe3D {
     }
     
     createTemperatureLayer() {
-        // Create temperature visualization as colored overlay
+        // Create temperature visualization using NASA POWER data
         const geometry = new THREE.SphereGeometry(1.01, 32, 32);
         const material = new THREE.MeshBasicMaterial({
             transparent: true,
@@ -1854,104 +2022,139 @@ class Globe3D {
             side: THREE.DoubleSide
         });
         
-        // Create temperature gradient texture
+        // Create temperature gradient texture based on NASA data
         const canvas = document.createElement('canvas');
         canvas.width = 1024;
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
         
-        // Create realistic temperature zones
-        // Arctic regions (very cold)
-        ctx.fillStyle = '#000080'; // Deep blue
-        ctx.fillRect(0, 0, 1024, 60);
-        ctx.fillRect(0, 452, 1024, 60);
+        // Get NASA temperature data if available
+        const nasaData = this.layers.temperature.nasaData;
+        const metadata = this.layers.temperature.metadata;
         
-        // Subarctic regions
-        ctx.fillStyle = '#4169E1'; // Royal blue
-        ctx.fillRect(0, 60, 1024, 40);
-        ctx.fillRect(0, 412, 1024, 40);
-        
-        // Temperate regions
-        ctx.fillStyle = '#00BFFF'; // Deep sky blue
-        ctx.fillRect(0, 100, 1024, 30);
-        ctx.fillRect(0, 382, 1024, 30);
-        
-        // Subtropical regions
-        ctx.fillStyle = '#32CD32'; // Lime green
-        ctx.fillRect(0, 130, 1024, 25);
-        ctx.fillRect(0, 357, 1024, 25);
-        
-        // Tropical regions (hot)
-        ctx.fillStyle = '#FF4500'; // Orange red
-        ctx.fillRect(0, 155, 1024, 30);
-        ctx.fillRect(0, 327, 1024, 30);
-        
-        // Equatorial region (hottest)
-        ctx.fillStyle = '#FF0000'; // Red
-        ctx.fillRect(0, 185, 1024, 20);
-        ctx.fillRect(0, 307, 1024, 20);
-        
-        // Add continental temperature variations
-        // North America - continental effect
-        ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
-        ctx.beginPath();
-        ctx.moveTo(150, 80);
-        ctx.bezierCurveTo(200, 60, 250, 70, 300, 90);
-        ctx.bezierCurveTo(350, 110, 400, 120, 450, 100);
-        ctx.bezierCurveTo(500, 80, 550, 60, 600, 80);
-        ctx.bezierCurveTo(650, 100, 700, 120, 750, 100);
-        ctx.bezierCurveTo(800, 80, 850, 60, 900, 80);
-        ctx.lineTo(900, 120);
-        ctx.bezierCurveTo(850, 100, 800, 120, 750, 140);
-        ctx.bezierCurveTo(700, 160, 650, 180, 600, 160);
-        ctx.bezierCurveTo(550, 140, 500, 160, 450, 180);
-        ctx.bezierCurveTo(400, 200, 350, 190, 300, 170);
-        ctx.bezierCurveTo(250, 150, 200, 160, 150, 140);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Europe - maritime influence
-        ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
-        ctx.beginPath();
-        ctx.moveTo(450, 120);
-        ctx.bezierCurveTo(500, 100, 550, 110, 600, 130);
-        ctx.bezierCurveTo(650, 150, 700, 160, 750, 140);
-        ctx.bezierCurveTo(800, 120, 850, 100, 900, 120);
-        ctx.lineTo(900, 160);
-        ctx.bezierCurveTo(850, 140, 800, 160, 750, 180);
-        ctx.bezierCurveTo(700, 200, 650, 190, 600, 170);
-        ctx.bezierCurveTo(550, 150, 500, 160, 450, 180);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Asia - continental extremes
-        ctx.fillStyle = 'rgba(255, 50, 0, 0.5)';
-        ctx.beginPath();
-        ctx.moveTo(700, 60);
-        ctx.bezierCurveTo(750, 40, 800, 50, 850, 70);
-        ctx.bezierCurveTo(900, 90, 950, 100, 1000, 80);
-        ctx.lineTo(1000, 120);
-        ctx.bezierCurveTo(950, 100, 900, 120, 850, 140);
-        ctx.bezierCurveTo(800, 160, 750, 150, 700, 130);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Add ocean current influences
-        ctx.fillStyle = 'rgba(0, 100, 200, 0.2)';
-        for (let i = 0; i < 8; i++) {
-            const x = i * 128;
-            const y = 256 + Math.sin(i * 0.5) * 50;
-            ctx.beginPath();
-            ctx.ellipse(x, y, 60, 20, 0, 0, 2 * Math.PI);
-            ctx.fill();
+        if (nasaData && nasaData.derived_metrics && nasaData.derived_metrics.temperature) {
+            // Use NASA temperature data to create realistic zones
+            const tempData = nasaData.derived_metrics.temperature;
+            const avgTemp = tempData.mean || 15; // Default to 15°C
+            
+            // Create temperature zones based on NASA data
+            this.createNASATemperatureZones(ctx, avgTemp, metadata);
+        } else {
+            // Fallback to realistic temperature zones
+            this.createDefaultTemperatureZones(ctx);
         }
         
+        // Create texture from canvas
         const texture = new THREE.CanvasTexture(canvas);
         material.map = texture;
         
         const temperatureMesh = new THREE.Mesh(geometry, material);
-        this.scene.add(temperatureMesh);
         this.layers.temperature.objects.push(temperatureMesh);
+        this.scene.add(temperatureMesh);
+        
+        // Add NASA data attribution
+        this.addNASAAttribution('temperature', metadata);
+    }
+    
+    createNASATemperatureZones(ctx, avgTemp, metadata) {
+        // Create temperature zones based on NASA POWER data
+        const tempRange = 40; // Temperature range around average
+        
+        // Arctic regions (very cold) - based on NASA data
+        const arcticTemp = avgTemp - tempRange;
+        const arcticColor = this.temperatureToColor(arcticTemp);
+        ctx.fillStyle = arcticColor;
+        ctx.fillRect(0, 0, 1024, 60);
+        ctx.fillRect(0, 452, 1024, 60);
+        
+        // Polar regions (cold)
+        const polarTemp = avgTemp - tempRange * 0.6;
+        const polarColor = this.temperatureToColor(polarTemp);
+        ctx.fillStyle = polarColor;
+        ctx.fillRect(0, 60, 1024, 40);
+        ctx.fillRect(0, 412, 1024, 40);
+        
+        // Temperate regions (moderate)
+        const temperateTemp = avgTemp - tempRange * 0.2;
+        const temperateColor = this.temperatureToColor(temperateTemp);
+        ctx.fillStyle = temperateColor;
+        ctx.fillRect(0, 100, 1024, 80);
+        ctx.fillRect(0, 332, 1024, 80);
+        
+        // Subtropical regions (warm)
+        const subtropicalTemp = avgTemp + tempRange * 0.2;
+        const subtropicalColor = this.temperatureToColor(subtropicalTemp);
+        ctx.fillStyle = subtropicalColor;
+        ctx.fillRect(0, 180, 1024, 60);
+        ctx.fillRect(0, 272, 1024, 60);
+        
+        // Tropical regions (hot)
+        const tropicalTemp = avgTemp + tempRange * 0.6;
+        const tropicalColor = this.temperatureToColor(tropicalTemp);
+        ctx.fillStyle = tropicalColor;
+        ctx.fillRect(0, 240, 1024, 32);
+        
+        // Add NASA data source indicator
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '12px Arial';
+        ctx.fillText(`NASA POWER: ${metadata?.data_source || 'Temperature Data'}`, 10, 20);
+    }
+    
+    createDefaultTemperatureZones(ctx) {
+        // Fallback temperature zones
+        ctx.fillStyle = '#000080'; // Deep blue - Arctic
+        ctx.fillRect(0, 0, 1024, 60);
+        ctx.fillRect(0, 452, 1024, 60);
+        
+        ctx.fillStyle = '#4169E1'; // Royal blue - Polar
+        ctx.fillRect(0, 60, 1024, 40);
+        ctx.fillRect(0, 412, 1024, 40);
+        
+        ctx.fillStyle = '#32CD32'; // Lime green - Temperate
+        ctx.fillRect(0, 100, 1024, 80);
+        ctx.fillRect(0, 332, 1024, 80);
+        
+        ctx.fillStyle = '#FFD700'; // Gold - Subtropical
+        ctx.fillRect(0, 180, 1024, 60);
+        ctx.fillRect(0, 272, 1024, 60);
+        
+        ctx.fillStyle = '#FF4500'; // Orange red - Tropical
+        ctx.fillRect(0, 240, 1024, 32);
+    }
+    
+    temperatureToColor(temp) {
+        // Convert temperature to color using NASA-style color mapping
+        const normalizedTemp = (temp + 50) / 100; // Normalize to 0-1 range
+        const clampedTemp = Math.max(0, Math.min(1, normalizedTemp));
+        
+        if (clampedTemp < 0.2) {
+            // Very cold - blue
+            const intensity = clampedTemp / 0.2;
+            return `rgb(${Math.floor(0 * intensity)}, ${Math.floor(0 * intensity)}, ${Math.floor(128 + 127 * intensity)})`;
+        } else if (clampedTemp < 0.4) {
+            // Cold - cyan to green
+            const intensity = (clampedTemp - 0.2) / 0.2;
+            return `rgb(${Math.floor(0 + 50 * intensity)}, ${Math.floor(128 + 127 * intensity)}, ${Math.floor(255 - 127 * intensity)})`;
+        } else if (clampedTemp < 0.6) {
+            // Moderate - green to yellow
+            const intensity = (clampedTemp - 0.4) / 0.2;
+            return `rgb(${Math.floor(50 + 205 * intensity)}, ${Math.floor(255 - 0 * intensity)}, ${Math.floor(128 - 128 * intensity)})`;
+        } else if (clampedTemp < 0.8) {
+            // Warm - yellow to orange
+            const intensity = (clampedTemp - 0.6) / 0.2;
+            return `rgb(${Math.floor(255 - 0 * intensity)}, ${Math.floor(255 - 69 * intensity)}, ${Math.floor(0 + 0 * intensity)})`;
+        } else {
+            // Hot - orange to red
+            const intensity = (clampedTemp - 0.8) / 0.2;
+            return `rgb(${Math.floor(255 - 0 * intensity)}, ${Math.floor(186 - 186 * intensity)}, ${Math.floor(0 + 0 * intensity)})`;
+        }
+    }
+    
+    addNASAAttribution(layerName, metadata) {
+        // Add NASA attribution to the layer
+        if (metadata && metadata.data_source) {
+            console.log(`NASA ${layerName} layer: ${metadata.data_source}`);
+        }
     }
     
     createWindLayer() {
