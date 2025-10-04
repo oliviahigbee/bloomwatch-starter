@@ -643,30 +643,182 @@ class BloomWatchApp {
         const predictionCard = document.getElementById('predictionCard');
         
         if (predictionCard) {
+            // Generate detailed prediction display
+            const details = prediction.prediction_details || {};
+            const regional = prediction.regional_analysis || {};
+            const risks = prediction.risk_factors || [];
+            const uncertainty = prediction.uncertainty_range || {};
+            
+            // Individual model predictions
+            const individualPreds = prediction.individual_predictions || {};
+            const modelPredsHtml = Object.entries(individualPreds).map(([model, value]) => 
+                `<div class="d-flex justify-content-between">
+                    <span class="text-capitalize">${model.replace('_', ' ')}</span>
+                    <span class="badge bg-secondary">${(value * 100).toFixed(1)}%</span>
+                </div>`
+            ).join('');
+            
+            // Risk factors
+            const riskHtml = risks.map(risk => 
+                `<div class="alert alert-${risk.severity === 'high' ? 'danger' : risk.severity === 'medium' ? 'warning' : 'info'} alert-sm">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>${risk.type.replace('_', ' ')}:</strong> ${risk.description}
+                </div>`
+            ).join('');
+            
+            // Regional characteristics
+            const climateChars = regional.climate_characteristics || [];
+            const vegetationChars = regional.vegetation_characteristics || [];
+            const dominantFactors = regional.dominant_factors || [];
+            
             predictionCard.innerHTML = `
                 <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="fas fa-brain me-2"></i>AI Bloom Prediction</h6>
+                    <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Enhanced AI Bloom Prediction</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
+                    <!-- Main Prediction -->
+                    <div class="row mb-3">
+                        <div class="col-4">
                             <h4 class="text-primary">${(prediction.predicted_intensity * 100).toFixed(1)}%</h4>
                             <small class="text-muted">Predicted Intensity</small>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <h4 class="text-success">${(prediction.confidence * 100).toFixed(1)}%</h4>
                             <small class="text-muted">Confidence</small>
                         </div>
+                        <div class="col-4">
+                            <h4 class="text-info">${prediction.days_ahead}</h4>
+                            <small class="text-muted">Days Ahead</small>
+                        </div>
                     </div>
-                    <hr>
-                    <p><strong>Model:</strong> ${prediction.model_used}</p>
-                    <p><strong>Timeframe:</strong> ${prediction.days_ahead} days ahead</p>
-                    <div class="progress">
-                        <div class="progress-bar bg-primary" style="width: ${prediction.predicted_intensity * 100}%"></div>
+                    
+                    <!-- Uncertainty Range -->
+                    <div class="mb-3">
+                        <label class="form-label">Uncertainty Range:</label>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-warning" style="width: ${uncertainty.lower * 100}%"></div>
+                            <div class="progress-bar bg-primary" style="width: ${(uncertainty.upper - uncertainty.lower) * 100}%"></div>
+                        </div>
+                        <small class="text-muted">${(uncertainty.lower * 100).toFixed(1)}% - ${(uncertainty.upper * 100).toFixed(1)}%</small>
                     </div>
+                    
+                    <!-- Model Details -->
+                    <div class="mb-3">
+                        <h6><i class="fas fa-cogs me-1"></i>Model Details</h6>
+                        <p><strong>Ensemble Method:</strong> ${prediction.model_used}</p>
+                        <div class="model-predictions">
+                            <small class="text-muted">Individual Model Predictions:</small>
+                            ${modelPredsHtml}
+                        </div>
+                    </div>
+                    
+                    <!-- Regional Analysis -->
+                    <div class="mb-3">
+                        <h6><i class="fas fa-globe me-1"></i>Regional Analysis</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>Hemisphere:</strong> ${regional.hemisphere || 'Unknown'}</p>
+                                <p><strong>Latitude Zone:</strong> ${regional.latitude_zone || 'Unknown'}</p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>Climate:</strong> ${climateChars.slice(0, 2).join(', ') || 'Unknown'}</p>
+                                <p><strong>Vegetation:</strong> ${vegetationChars.slice(0, 2).join(', ') || 'Unknown'}</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted"><strong>Dominant Factors:</strong> ${dominantFactors.join(', ')}</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Prediction Details -->
+                    <div class="mb-3">
+                        <h6><i class="fas fa-chart-line me-1"></i>Prediction Analysis</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>Seasonal Influence:</strong> ${details.seasonal_influence?.influence || 'Unknown'}</p>
+                                <p><strong>Trend:</strong> ${details.trend_analysis?.trend || 'Unknown'}</p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>Peak Timing:</strong> ${details.peak_timing?.peak_month || 'Unknown'}</p>
+                                <p><strong>Next Peak:</strong> ${details.peak_timing?.next_peak || 'Unknown'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Factors -->
+                    ${risks.length > 0 ? `
+                    <div class="mb-3">
+                        <h6><i class="fas fa-exclamation-triangle me-1"></i>Risk Assessment</h6>
+                        ${riskHtml}
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Intensity Curve Preview -->
+                    ${details.intensity_curve ? `
+                    <div class="mb-3">
+                        <h6><i class="fas fa-chart-area me-1"></i>Seasonal Intensity Pattern</h6>
+                        <div class="intensity-preview">
+                            <canvas id="intensityChart" width="300" height="100"></canvas>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
             predictionCard.style.display = 'block';
+            
+            // Draw intensity curve if available
+            if (details.intensity_curve && details.intensity_curve.monthly_intensities) {
+                this.drawIntensityCurve(details.intensity_curve.monthly_intensities);
+            }
+        }
+    }
+    
+    drawIntensityCurve(intensities) {
+        const canvas = document.getElementById('intensityChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, height - 20);
+        ctx.lineTo(width - 20, height - 20);
+        ctx.moveTo(20, 20);
+        ctx.lineTo(20, height - 20);
+        ctx.stroke();
+        
+        // Draw curve
+        ctx.strokeStyle = '#28a745';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        const stepX = (width - 40) / (intensities.length - 1);
+        for (let i = 0; i < intensities.length; i++) {
+            const x = 20 + i * stepX;
+            const y = height - 20 - (intensities[i] * (height - 40));
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+        
+        // Add month labels
+        ctx.fillStyle = '#666';
+        ctx.font = '10px Arial';
+        const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+        for (let i = 0; i < intensities.length; i += 2) {
+            const x = 20 + i * stepX;
+            ctx.fillText(months[i], x - 3, height - 5);
         }
     }
     

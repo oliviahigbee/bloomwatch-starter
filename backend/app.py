@@ -8,8 +8,11 @@ import os
 from dotenv import load_dotenv
 from functools import lru_cache
 import joblib
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+import xgboost as xgb
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -26,33 +29,56 @@ EARTHDATA_API_URL = "https://cmr.earthdata.nasa.gov/search"
 CLIMATE_API_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
 class BloomPredictor:
-    """AI-powered bloom prediction and anomaly detection"""
+    """AI-powered bloom prediction and anomaly detection with regional specificity"""
     
     def __init__(self):
-        self.model = None
+        self.models = {
+            'random_forest': RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42, n_jobs=-1),
+            'gradient_boosting': GradientBoostingRegressor(n_estimators=200, max_depth=8, learning_rate=0.1, random_state=42),
+            'neural_network': MLPRegressor(hidden_layer_sizes=(100, 50), max_iter=500, random_state=42),
+            'xgboost': xgb.XGBRegressor(n_estimators=200, max_depth=8, learning_rate=0.1, random_state=42)
+        }
         self.scaler = StandardScaler()
         self.is_trained = False
         self.anomaly_threshold = 0.15
+        self.regional_weights = {}
+        self.climate_zones = {}
+        self.vegetation_types = {}
         
-    def train_model(self, historical_data):
-        """Train ML model on historical bloom data"""
+    def train_model(self, historical_data, lat=None, lon=None):
+        """Train ensemble ML models on historical bloom data with regional features"""
         try:
-            # Prepare training data
-            X, y = self._prepare_training_data(historical_data)
+            # Prepare training data with regional features
+            X, y = self._prepare_training_data(historical_data, lat, lon)
             
             if len(X) < 10:  # Need minimum data for training
                 return False
                 
-            # Train Random Forest model
-            self.model = RandomForestRegressor(
-                n_estimators=100,
-                max_depth=10,
-                random_state=42,
-                n_jobs=-1
-            )
-            
+            # Scale features
             X_scaled = self.scaler.fit_transform(X)
-            self.model.fit(X_scaled, y)
+            
+            # Train ensemble of models
+            model_scores = {}
+            for name, model in self.models.items():
+                try:
+                    # Cross-validation to assess model performance
+                    scores = cross_val_score(model, X_scaled, y, cv=3, scoring='neg_mean_squared_error')
+                    model_scores[name] = -scores.mean()
+                    
+                    # Train the model
+                    model.fit(X_scaled, y)
+                except Exception as e:
+                    print(f"Failed to train {name}: {e}")
+                    model_scores[name] = float('inf')
+            
+            # Calculate ensemble weights based on performance
+            if model_scores:
+                total_score = sum(1/score for score in model_scores.values() if score != float('inf'))
+                self.regional_weights = {
+                    name: (1/score)/total_score if score != float('inf') else 0
+                    for name, score in model_scores.items()
+                }
+            
             self.is_trained = True
             return True
             
@@ -60,67 +86,530 @@ class BloomPredictor:
             print(f"Model training failed: {e}")
             return False
     
-    def _prepare_training_data(self, data):
-        """Prepare features and targets for ML training"""
+    def _prepare_training_data(self, data, lat=None, lon=None):
+        """Prepare enhanced features and targets for ML training with regional specificity"""
         features = []
         targets = []
         
         for i in range(1, len(data)):
             if i >= 12:  # Need at least a year of data
-                # Features: previous 12 months of data + seasonal features
+                # Basic temporal features
                 prev_12_months = [d['ndvi'] for d in data[i-12:i]]
                 month = i % 12
                 season = month // 3
                 
-                feature_vector = prev_12_months + [month, season, np.mean(prev_12_months), np.std(prev_12_months)]
+                # Enhanced vegetation indices
+                prev_evi = [d.get('evi', d['ndvi'] * 0.9) for d in data[i-12:i]]
+                prev_savi = [d.get('savi', d['ndvi'] * 1.1) for d in data[i-12:i]]
+                prev_gndvi = [d.get('gndvi', d['ndvi'] * 0.8) for d in data[i-12:i]]
+                
+                # Statistical features
+                ndvi_mean = np.mean(prev_12_months)
+                ndvi_std = np.std(prev_12_months)
+                ndvi_trend = np.polyfit(range(12), prev_12_months, 1)[0]
+                ndvi_peak = np.max(prev_12_months)
+                ndvi_min = np.min(prev_12_months)
+                
+                # Seasonal features
+                spring_avg = np.mean(prev_12_months[2:5])  # March-May
+                summer_avg = np.mean(prev_12_months[5:8])  # June-August
+                fall_avg = np.mean(prev_12_months[8:11])   # September-November
+                winter_avg = np.mean([prev_12_months[11]] + prev_12_months[0:2])  # December-February
+                
+                # Regional features
+                regional_features = self._get_regional_features(lat, lon, month)
+                
+                # Climate zone features
+                climate_features = self._get_climate_features(lat, lon, month)
+                
+                # Vegetation type features
+                vegetation_features = self._get_vegetation_features(lat, lon)
+                
+                # Combine all features
+                feature_vector = (
+                    prev_12_months +  # 12 NDVI values
+                    prev_evi +        # 12 EVI values
+                    prev_savi +       # 12 SAVI values
+                    prev_gndvi +      # 12 GNDVI values
+                    [month, season, ndvi_mean, ndvi_std, ndvi_trend, ndvi_peak, ndvi_min] +  # 7 statistical features
+                    [spring_avg, summer_avg, fall_avg, winter_avg] +  # 4 seasonal averages
+                    regional_features +  # Regional features
+                    climate_features +   # Climate features
+                    vegetation_features  # Vegetation features
+                )
+                
                 features.append(feature_vector)
                 targets.append(data[i]['ndvi'])
         
         return np.array(features), np.array(targets)
     
-    def predict_bloom(self, recent_data, days_ahead=30):
-        """Predict future bloom intensity"""
+    def _get_regional_features(self, lat, lon, month):
+        """Get regional-specific features based on latitude, longitude, and month"""
+        if lat is None or lon is None:
+            return [0] * 8  # Default features
+        
+        # Hemisphere features
+        hemisphere = 1 if lat >= 0 else -1
+        
+        # Distance from equator (affects seasonality)
+        equator_distance = abs(lat)
+        
+        # Continental vs maritime influence (distance from coast approximation)
+        # Simplified: distance from major coastlines
+        continental_factor = min(1.0, max(0.0, 1.0 - abs(lon) / 180.0))
+        
+        # Elevation approximation (simplified based on latitude)
+        elevation_factor = max(0.0, min(1.0, (abs(lat) - 30) / 60))  # Higher at poles
+        
+        # Urban vs rural (simplified based on longitude patterns)
+        urban_factor = 0.5 + 0.3 * np.sin(lon * np.pi / 180)  # Simplified urban distribution
+        
+        # Seasonal day length effect
+        day_length_factor = 0.5 + 0.5 * np.cos(2 * np.pi * (month - 6) / 12) * np.cos(lat * np.pi / 180)
+        
+        # Temperature seasonality
+        temp_seasonality = np.sin(2 * np.pi * (month - 3) / 12) * hemisphere
+        
+        # Precipitation seasonality (simplified)
+        precip_seasonality = 0.5 + 0.3 * np.sin(2 * np.pi * (month - 6) / 12)
+        
+        return [
+            hemisphere, equator_distance, continental_factor, elevation_factor,
+            urban_factor, day_length_factor, temp_seasonality, precip_seasonality
+        ]
+    
+    def _get_climate_features(self, lat, lon, month):
+        """Get climate zone features based on Köppen classification approximation"""
+        if lat is None or lon is None:
+            return [0] * 6  # Default features
+        
+        # Simplified Köppen climate classification
+        if abs(lat) < 10:
+            climate_zone = 1  # Tropical
+        elif abs(lat) < 25:
+            climate_zone = 2  # Subtropical
+        elif abs(lat) < 40:
+            climate_zone = 3  # Temperate
+        elif abs(lat) < 60:
+            climate_zone = 4  # Continental
+        else:
+            climate_zone = 5  # Polar
+        
+        # Temperature features
+        temp_range = max(0, min(1, (abs(lat) - 20) / 40))  # Temperature range increases with latitude
+        
+        # Precipitation features
+        if abs(lat) < 10:
+            precip_pattern = 1  # High year-round
+        elif abs(lat) < 30:
+            precip_pattern = 2  # Seasonal
+        else:
+            precip_pattern = 3  # Moderate
+        
+        # Growing season length (approximation)
+        growing_season = max(0, min(1, (60 - abs(lat)) / 60))
+        
+        # Frost risk
+        frost_risk = max(0, min(1, (abs(lat) - 30) / 30))
+        
+        # Drought risk (simplified)
+        drought_risk = 0.3 + 0.4 * abs(np.sin(lon * np.pi / 180))
+        
+        return [climate_zone, temp_range, precip_pattern, growing_season, frost_risk, drought_risk]
+    
+    def _get_vegetation_features(self, lat, lon):
+        """Get vegetation type features based on location"""
+        if lat is None or lon is None:
+            return [0] * 5  # Default features
+        
+        # Simplified vegetation classification
+        if abs(lat) < 10:
+            vegetation_type = 1  # Tropical forest
+        elif abs(lat) < 25:
+            vegetation_type = 2  # Subtropical forest/grassland
+        elif abs(lat) < 40:
+            vegetation_type = 3  # Temperate forest
+        elif abs(lat) < 60:
+            vegetation_type = 4  # Boreal forest/tundra
+        else:
+            vegetation_type = 5  # Arctic tundra
+        
+        # Vegetation density (approximation)
+        if abs(lat) < 20:
+            density = 0.9  # High density in tropics
+        elif abs(lat) < 40:
+            density = 0.7  # Medium-high density
+        elif abs(lat) < 60:
+            density = 0.5  # Medium density
+        else:
+            density = 0.2  # Low density in polar regions
+        
+        # Deciduous vs evergreen (simplified)
+        deciduous_ratio = max(0, min(1, (40 - abs(lat)) / 40))
+        
+        # Grassland vs forest ratio
+        grassland_ratio = 0.3 + 0.4 * abs(np.sin(lon * np.pi / 180))
+        
+        # Agricultural land use (simplified)
+        agricultural_ratio = 0.2 + 0.3 * abs(np.cos(lon * np.pi / 180))
+        
+        return [vegetation_type, density, deciduous_ratio, grassland_ratio, agricultural_ratio]
+    
+    def predict_bloom(self, recent_data, days_ahead=30, lat=None, lon=None):
+        """Predict future bloom intensity with detailed regional analysis"""
         if not self.is_trained or len(recent_data) < 12:
-            return self._fallback_prediction(recent_data, days_ahead)
+            return self._fallback_prediction(recent_data, days_ahead, lat, lon)
         
         try:
-            # Use last 12 months for prediction
+            # Prepare enhanced features
             last_12_months = [d['ndvi'] for d in recent_data[-12:]]
             month = len(recent_data) % 12
             season = month // 3
             
-            feature_vector = last_12_months + [month, season, np.mean(last_12_months), np.std(last_12_months)]
+            # Enhanced vegetation indices
+            last_evi = [d.get('evi', d['ndvi'] * 0.9) for d in recent_data[-12:]]
+            last_savi = [d.get('savi', d['ndvi'] * 1.1) for d in recent_data[-12:]]
+            last_gndvi = [d.get('gndvi', d['ndvi'] * 0.8) for d in recent_data[-12:]]
+            
+            # Statistical features
+            ndvi_mean = np.mean(last_12_months)
+            ndvi_std = np.std(last_12_months)
+            ndvi_trend = np.polyfit(range(12), last_12_months, 1)[0]
+            ndvi_peak = np.max(last_12_months)
+            ndvi_min = np.min(last_12_months)
+            
+            # Seasonal features
+            spring_avg = np.mean(last_12_months[2:5])
+            summer_avg = np.mean(last_12_months[5:8])
+            fall_avg = np.mean(last_12_months[8:11])
+            winter_avg = np.mean([last_12_months[11]] + last_12_months[0:2])
+            
+            # Regional features
+            regional_features = self._get_regional_features(lat, lon, month)
+            climate_features = self._get_climate_features(lat, lon, month)
+            vegetation_features = self._get_vegetation_features(lat, lon)
+            
+            # Combine all features
+            feature_vector = (
+                last_12_months + last_evi + last_savi + last_gndvi +
+                [month, season, ndvi_mean, ndvi_std, ndvi_trend, ndvi_peak, ndvi_min] +
+                [spring_avg, summer_avg, fall_avg, winter_avg] +
+                regional_features + climate_features + vegetation_features
+            )
+            
             X = np.array([feature_vector])
             X_scaled = self.scaler.transform(X)
             
-            prediction = self.model.predict(X_scaled)[0]
-            confidence = min(0.95, max(0.1, 1.0 - np.std(last_12_months)))
+            # Ensemble prediction
+            predictions = {}
+            for name, model in self.models.items():
+                try:
+                    pred = model.predict(X_scaled)[0]
+                    predictions[name] = float(pred)
+                except:
+                    predictions[name] = 0.5
+            
+            # Weighted ensemble prediction
+            if self.regional_weights:
+                ensemble_prediction = sum(
+                    predictions[name] * self.regional_weights.get(name, 0)
+                    for name in predictions.keys()
+                )
+            else:
+                ensemble_prediction = np.mean(list(predictions.values()))
+            
+            # Calculate confidence based on model agreement and data quality
+            model_agreement = 1.0 - np.std(list(predictions.values()))
+            data_quality = 1.0 - min(1.0, ndvi_std)
+            confidence = min(0.95, max(0.1, (model_agreement + data_quality) / 2))
+            
+            # Generate detailed prediction breakdown
+            prediction_details = self._generate_prediction_details(
+                ensemble_prediction, predictions, recent_data, lat, lon, month
+            )
             
             return {
-                'predicted_intensity': float(prediction),
+                'predicted_intensity': float(ensemble_prediction),
                 'confidence': float(confidence),
                 'days_ahead': days_ahead,
-                'model_used': 'RandomForest'
+                'model_used': 'Ensemble',
+                'individual_predictions': predictions,
+                'model_weights': self.regional_weights,
+                'prediction_details': prediction_details,
+                'regional_analysis': self._get_regional_analysis(lat, lon, month),
+                'risk_factors': self._assess_risk_factors(recent_data, lat, lon),
+                'uncertainty_range': self._calculate_uncertainty_range(predictions, confidence)
             }
             
         except Exception as e:
             print(f"Prediction failed: {e}")
-            return self._fallback_prediction(recent_data, days_ahead)
+            return self._fallback_prediction(recent_data, days_ahead, lat, lon)
     
-    def _fallback_prediction(self, recent_data, days_ahead):
-        """Fallback prediction using simple trend analysis"""
+    def _fallback_prediction(self, recent_data, days_ahead, lat=None, lon=None):
+        """Enhanced fallback prediction using simple trend analysis with regional adjustments"""
         if len(recent_data) < 3:
-            return {'predicted_intensity': 0.5, 'confidence': 0.1, 'days_ahead': days_ahead, 'model_used': 'Fallback'}
+            return {
+                'predicted_intensity': 0.5, 
+                'confidence': 0.1, 
+                'days_ahead': days_ahead, 
+                'model_used': 'Fallback',
+                'prediction_details': {'method': 'insufficient_data'},
+                'regional_analysis': self._get_regional_analysis(lat, lon, 0),
+                'risk_factors': []
+            }
         
         recent_values = [d['ndvi'] for d in recent_data[-3:]]
         trend = np.polyfit(range(len(recent_values)), recent_values, 1)[0]
         predicted = recent_values[-1] + trend * (days_ahead / 30)
         
+        # Regional adjustment
+        if lat is not None and lon is not None:
+            regional_features = self._get_regional_features(lat, lon, 0)
+            regional_adjustment = 0.1 * regional_features[1]  # Adjust based on distance from equator
+            predicted += regional_adjustment
+        
         return {
             'predicted_intensity': float(max(0, min(1, predicted))),
             'confidence': 0.3,
             'days_ahead': days_ahead,
-            'model_used': 'Trend'
+            'model_used': 'Trend',
+            'prediction_details': {'method': 'trend_analysis', 'trend': float(trend)},
+            'regional_analysis': self._get_regional_analysis(lat, lon, 0),
+            'risk_factors': self._assess_risk_factors(recent_data, lat, lon)
+        }
+    
+    def _generate_prediction_details(self, ensemble_prediction, individual_predictions, recent_data, lat, lon, month):
+        """Generate detailed breakdown of prediction factors"""
+        details = {
+            'ensemble_method': 'weighted_average',
+            'primary_factors': [],
+            'seasonal_influence': self._get_seasonal_influence(month, lat),
+            'trend_analysis': self._analyze_trend(recent_data),
+            'peak_timing': self._predict_peak_timing(ensemble_prediction, month, lat),
+            'intensity_curve': self._generate_intensity_curve(ensemble_prediction, month, lat)
+        }
+        
+        # Identify primary contributing factors
+        if lat is not None:
+            if abs(lat) < 10:
+                details['primary_factors'].append('tropical_climate')
+            elif abs(lat) < 30:
+                details['primary_factors'].append('subtropical_seasonality')
+            elif abs(lat) < 50:
+                details['primary_factors'].append('temperate_seasonality')
+            else:
+                details['primary_factors'].append('high_latitude_constraints')
+        
+        # Model agreement analysis
+        model_std = np.std(list(individual_predictions.values()))
+        if model_std < 0.05:
+            details['primary_factors'].append('high_model_agreement')
+        elif model_std > 0.15:
+            details['primary_factors'].append('model_uncertainty')
+        
+        return details
+    
+    def _get_regional_analysis(self, lat, lon, month):
+        """Get detailed regional analysis for the prediction"""
+        if lat is None or lon is None:
+            return {'region_type': 'unknown', 'characteristics': []}
+        
+        analysis = {
+            'hemisphere': 'northern' if lat >= 0 else 'southern',
+            'latitude_zone': self._get_latitude_zone(lat),
+            'climate_characteristics': self._get_climate_characteristics(lat, lon),
+            'vegetation_characteristics': self._get_vegetation_characteristics(lat, lon),
+            'seasonal_patterns': self._get_seasonal_patterns(lat, month),
+            'dominant_factors': self._get_dominant_factors(lat, lon, month)
+        }
+        
+        return analysis
+    
+    def _assess_risk_factors(self, recent_data, lat, lon):
+        """Assess risk factors that could affect bloom prediction accuracy"""
+        risks = []
+        
+        if len(recent_data) < 12:
+            risks.append({'type': 'insufficient_data', 'severity': 'high', 'description': 'Limited historical data'})
+        
+        if recent_data:
+            recent_std = np.std([d['ndvi'] for d in recent_data[-6:]])
+            if recent_std > 0.2:
+                risks.append({'type': 'high_variability', 'severity': 'medium', 'description': 'High recent variability'})
+        
+        if lat is not None:
+            if abs(lat) > 60:
+                risks.append({'type': 'extreme_latitude', 'severity': 'medium', 'description': 'Extreme latitude conditions'})
+            elif abs(lat) < 5:
+                risks.append({'type': 'tropical_complexity', 'severity': 'low', 'description': 'Complex tropical patterns'})
+        
+        return risks
+    
+    def _calculate_uncertainty_range(self, predictions, confidence):
+        """Calculate uncertainty range for predictions"""
+        if not predictions:
+            return {'lower': 0.0, 'upper': 1.0}
+        
+        values = list(predictions.values())
+        mean_pred = np.mean(values)
+        std_pred = np.std(values)
+        
+        # Adjust uncertainty based on confidence
+        uncertainty_factor = 1.0 - confidence
+        
+        return {
+            'lower': max(0.0, mean_pred - std_pred - uncertainty_factor * 0.1),
+            'upper': min(1.0, mean_pred + std_pred + uncertainty_factor * 0.1),
+            'standard_deviation': float(std_pred)
+        }
+    
+    def _get_latitude_zone(self, lat):
+        """Get latitude zone classification"""
+        if abs(lat) < 10:
+            return 'tropical'
+        elif abs(lat) < 25:
+            return 'subtropical'
+        elif abs(lat) < 40:
+            return 'temperate'
+        elif abs(lat) < 60:
+            return 'continental'
+        else:
+            return 'polar'
+    
+    def _get_climate_characteristics(self, lat, lon):
+        """Get climate characteristics for the region"""
+        characteristics = []
+        
+        if abs(lat) < 10:
+            characteristics.extend(['high_temperature', 'high_humidity', 'minimal_seasonality'])
+        elif abs(lat) < 30:
+            characteristics.extend(['moderate_seasonality', 'warm_temperatures'])
+        elif abs(lat) < 50:
+            characteristics.extend(['distinct_seasons', 'moderate_temperatures'])
+        else:
+            characteristics.extend(['extreme_seasonality', 'cold_temperatures'])
+        
+        return characteristics
+    
+    def _get_vegetation_characteristics(self, lat, lon):
+        """Get vegetation characteristics for the region"""
+        characteristics = []
+        
+        if abs(lat) < 10:
+            characteristics.extend(['tropical_forest', 'high_biodiversity', 'year_round_growth'])
+        elif abs(lat) < 30:
+            characteristics.extend(['mixed_vegetation', 'seasonal_variation'])
+        elif abs(lat) < 50:
+            characteristics.extend(['temperate_forest', 'deciduous_dominant'])
+        else:
+            characteristics.extend(['boreal_forest', 'coniferous_dominant', 'short_growing_season'])
+        
+        return characteristics
+    
+    def _get_seasonal_patterns(self, lat, month):
+        """Get seasonal patterns for the region"""
+        if abs(lat) < 10:
+            return {'pattern': 'minimal_seasonality', 'peak_months': 'year_round'}
+        elif abs(lat) < 30:
+            return {'pattern': 'subtropical', 'peak_months': 'spring_autumn'}
+        elif abs(lat) < 50:
+            return {'pattern': 'temperate', 'peak_months': 'spring_summer'}
+        else:
+            return {'pattern': 'high_latitude', 'peak_months': 'summer'}
+    
+    def _get_dominant_factors(self, lat, lon, month):
+        """Get dominant factors influencing bloom prediction"""
+        factors = []
+        
+        if abs(lat) < 10:
+            factors.extend(['temperature', 'precipitation', 'humidity'])
+        elif abs(lat) < 30:
+            factors.extend(['seasonal_temperature', 'precipitation_patterns'])
+        elif abs(lat) < 50:
+            factors.extend(['temperature_seasonality', 'day_length', 'frost_risk'])
+        else:
+            factors.extend(['extreme_temperature_variation', 'day_length_variation', 'growing_season_length'])
+        
+        return factors
+    
+    def _get_seasonal_influence(self, month, lat):
+        """Get seasonal influence on bloom prediction"""
+        if lat is None:
+            return {'influence': 'unknown'}
+        
+        hemisphere = 1 if lat >= 0 else -1
+        seasonal_phase = (month * hemisphere) % 12
+        
+        if seasonal_phase in [2, 3, 4]:  # Spring
+            return {'influence': 'spring_growth', 'strength': 'high'}
+        elif seasonal_phase in [5, 6, 7]:  # Summer
+            return {'influence': 'summer_peak', 'strength': 'high'}
+        elif seasonal_phase in [8, 9, 10]:  # Fall
+            return {'influence': 'autumn_decline', 'strength': 'medium'}
+        else:  # Winter
+            return {'influence': 'winter_dormancy', 'strength': 'low'}
+    
+    def _analyze_trend(self, recent_data):
+        """Analyze trend in recent data"""
+        if len(recent_data) < 6:
+            return {'trend': 'insufficient_data'}
+        
+        values = [d['ndvi'] for d in recent_data[-6:]]
+        trend = np.polyfit(range(len(values)), values, 1)[0]
+        
+        if trend > 0.01:
+            return {'trend': 'increasing', 'strength': abs(trend)}
+        elif trend < -0.01:
+            return {'trend': 'decreasing', 'strength': abs(trend)}
+        else:
+            return {'trend': 'stable', 'strength': abs(trend)}
+    
+    def _predict_peak_timing(self, prediction, month, lat):
+        """Predict peak bloom timing"""
+        if lat is None:
+            return {'peak_month': 'unknown'}
+        
+        # Simplified peak timing based on latitude and current month
+        if abs(lat) < 10:
+            return {'peak_month': 'year_round', 'next_peak': 'ongoing'}
+        elif abs(lat) < 30:
+            peak_months = [3, 4, 9, 10]  # Spring and fall
+            next_peak = min([m for m in peak_months if m > month], default=peak_months[0])
+            return {'peak_month': 'spring_autumn', 'next_peak': next_peak}
+        elif abs(lat) < 50:
+            peak_months = [4, 5, 6, 7]  # Spring to summer
+            next_peak = min([m for m in peak_months if m > month], default=peak_months[0])
+            return {'peak_month': 'spring_summer', 'next_peak': next_peak}
+        else:
+            peak_months = [6, 7, 8]  # Summer only
+            next_peak = min([m for m in peak_months if m > month], default=peak_months[0])
+            return {'peak_month': 'summer', 'next_peak': next_peak}
+    
+    def _generate_intensity_curve(self, prediction, month, lat):
+        """Generate predicted intensity curve over time"""
+        if lat is None:
+            return {'curve': 'unknown'}
+        
+        # Generate a simple intensity curve based on seasonal patterns
+        months = list(range(12))
+        intensities = []
+        
+        for m in months:
+            if abs(lat) < 10:  # Tropical - relatively constant
+                intensity = prediction * (0.8 + 0.2 * np.sin(2 * np.pi * m / 12))
+            elif abs(lat) < 30:  # Subtropical - two peaks
+                intensity = prediction * (0.6 + 0.4 * np.sin(2 * np.pi * m / 6))
+            elif abs(lat) < 50:  # Temperate - one main peak
+                intensity = prediction * (0.3 + 0.7 * np.sin(2 * np.pi * (m - 3) / 12))
+            else:  # High latitude - sharp summer peak
+                intensity = prediction * max(0.1, np.sin(2 * np.pi * (m - 6) / 12))
+            
+            intensities.append(max(0, min(1, intensity)))
+        
+        return {
+            'monthly_intensities': intensities,
+            'peak_intensity': max(intensities),
+            'peak_month': months[intensities.index(max(intensities))]
         }
     
     def detect_anomalies(self, data):
@@ -497,9 +986,9 @@ def predict_bloom():
         # Get historical data
         historical_data = simulate_nasa_data(lat, lon, '2020-01-01', '2024-12-31')
         
-        # Train model and predict
-        bloom_monitor.predictor.train_model(historical_data['data'])
-        prediction = bloom_monitor.predictor.predict_bloom(historical_data['data'], days_ahead)
+        # Train model and predict with regional features
+        bloom_monitor.predictor.train_model(historical_data['data'], lat, lon)
+        prediction = bloom_monitor.predictor.predict_bloom(historical_data['data'], days_ahead, lat, lon)
         
         return jsonify({
             'location': location,
