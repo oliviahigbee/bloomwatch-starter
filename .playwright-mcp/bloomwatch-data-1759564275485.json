@@ -1,0 +1,194 @@
+{
+  "timestamp": "2025-10-04T07:51:15.485Z",
+  "location": "global",
+  "timeRange": 5,
+  "vegetationIndex": "ndvi",
+  "bloomData": {
+    "data": [
+      {
+        "bloom_probability": 0.6,
+        "date": "2023-01-01T00:00:00",
+        "evi": 0.36,
+        "gndvi": 0.32,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.4,
+        "savi": 0.44
+      },
+      {
+        "bloom_probability": 0.778,
+        "date": "2023-01-31T00:00:00",
+        "evi": 0.467,
+        "gndvi": 0.415,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.518,
+        "savi": 0.57
+      },
+      {
+        "bloom_probability": 0.914,
+        "date": "2023-03-02T00:00:00",
+        "evi": 0.549,
+        "gndvi": 0.488,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.61,
+        "savi": 0.671
+      },
+      {
+        "bloom_probability": 0.979,
+        "date": "2023-04-01T00:00:00",
+        "evi": 0.588,
+        "gndvi": 0.522,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.653,
+        "savi": 0.718
+      },
+      {
+        "bloom_probability": 0.957,
+        "date": "2023-05-01T00:00:00",
+        "evi": 0.574,
+        "gndvi": 0.511,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.638,
+        "savi": 0.702
+      },
+      {
+        "bloom_probability": 0.853,
+        "date": "2023-05-31T00:00:00",
+        "evi": 0.512,
+        "gndvi": 0.455,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.569,
+        "savi": 0.626
+      },
+      {
+        "bloom_probability": 0.691,
+        "date": "2023-06-30T00:00:00",
+        "evi": 0.415,
+        "gndvi": 0.369,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.461,
+        "savi": 0.507
+      },
+      {
+        "bloom_probability": 0.509,
+        "date": "2023-07-30T00:00:00",
+        "evi": 0.305,
+        "gndvi": 0.271,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.339,
+        "savi": 0.373
+      },
+      {
+        "bloom_probability": 0.347,
+        "date": "2023-08-29T00:00:00",
+        "evi": 0.208,
+        "gndvi": 0.185,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.231,
+        "savi": 0.254
+      },
+      {
+        "bloom_probability": 0.243,
+        "date": "2023-09-28T00:00:00",
+        "evi": 0.146,
+        "gndvi": 0.129,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.162,
+        "savi": 0.178
+      },
+      {
+        "bloom_probability": 0.221,
+        "date": "2023-10-28T00:00:00",
+        "evi": 0.132,
+        "gndvi": 0.118,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.147,
+        "savi": 0.162
+      },
+      {
+        "bloom_probability": 0.286,
+        "date": "2023-11-27T00:00:00",
+        "evi": 0.171,
+        "gndvi": 0.152,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.19,
+        "savi": 0.209
+      },
+      {
+        "bloom_probability": 0.422,
+        "date": "2023-12-27T00:00:00",
+        "evi": 0.253,
+        "gndvi": 0.225,
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "ndvi": 0.282,
+        "savi": 0.31
+      }
+    ],
+    "location": {
+      "lat": 40.7128,
+      "lon": -74.006
+    },
+    "summary": {
+      "avg_bloom_intensity": 0.4,
+      "peak_bloom_date": "2023-01-01T00:00:00",
+      "total_observations": 13
+    },
+    "time_range": {
+      "end": "2023-12-31",
+      "start": "2023-01-01"
+    }
+  },
+  "predictions": null,
+  "anomalies": [],
+  "climateCorrelations": {},
+  "citizenObservations": [
+    {
+      "bloom_status": "full_bloom",
+      "confidence": 0.9,
+      "date": "2024-04-15",
+      "id": 1,
+      "location": {
+        "lat": 40.7128,
+        "lon": -74.006
+      },
+      "observer": "Citizen Scientist",
+      "photo_url": "/static/images/cherry_blossom_sample.jpg",
+      "species": "Cherry Blossom"
+    },
+    {
+      "bloom_status": "early_bloom",
+      "confidence": 0.8,
+      "date": "2024-03-20",
+      "id": 2,
+      "location": {
+        "lat": 51.5074,
+        "lon": -0.1278
+      },
+      "observer": "Nature Enthusiast",
+      "photo_url": "/static/images/daffodil_sample.jpg",
+      "species": "Daffodil"
+    }
+  ],
+  "performanceMetrics": {
+    "pageLoadTime": 129.09999990463257,
+    "memoryUsage": 14931252,
+    "timestamp": 1759564271906
+  },
+  "metadata": {
+    "version": "2.0",
+    "dataSource": "NASA Earth Observation APIs",
+    "exportFormat": "json"
+  }
+}
