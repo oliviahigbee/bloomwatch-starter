@@ -86,6 +86,7 @@ cd bloomwatch-starter
 
 2. Create and activate virtual environment:
 ```bash
+sudo apt-get install python3-venv # If not already installed
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
