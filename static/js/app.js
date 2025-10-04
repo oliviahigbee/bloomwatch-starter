@@ -1000,6 +1000,15 @@ class Globe3D {
         this.isAnimating = false;
         this.showBloomData = false;
         
+        // Layer system
+        this.layers = {
+            temperature: { active: false, objects: [] },
+            wind: { active: false, objects: [] },
+            vegetation: { active: false, objects: [] },
+            precipitation: { active: false, objects: [] },
+            elevation: { active: false, objects: [] }
+        };
+        
         this.init();
     }
     
@@ -1220,6 +1229,28 @@ class Globe3D {
             this.globe.rotation.y += 0.002;
         }
         
+        // Animate wind layer if active
+        if (this.layers.wind.active && this.layers.wind.objects.length > 0) {
+            const windPoints = this.layers.wind.objects[0];
+            if (windPoints && windPoints.userData && windPoints.userData.originalPositions) {
+                const positions = windPoints.geometry.attributes.position.array;
+                const time = Date.now() * 0.001;
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    const originalX = windPoints.userData.originalPositions[i];
+                    const originalY = windPoints.userData.originalPositions[i + 1];
+                    const originalZ = windPoints.userData.originalPositions[i + 2];
+                    
+                    // Add wind-like movement
+                    positions[i] = originalX + Math.sin(time + i * 0.1) * 0.01;
+                    positions[i + 1] = originalY + Math.cos(time + i * 0.1) * 0.01;
+                    positions[i + 2] = originalZ + Math.sin(time * 0.5 + i * 0.1) * 0.01;
+                }
+                
+                windPoints.geometry.attributes.position.needsUpdate = true;
+            }
+        }
+        
         // Update controls
         this.controls.update();
         
@@ -1286,6 +1317,269 @@ class Globe3D {
         if (dataCount && this.data) {
             dataCount.textContent = this.data.total_points || 0;
         }
+        
+        // Update active layers display
+        const activeLayers = document.getElementById('activeLayers');
+        if (activeLayers) {
+            const activeLayerNames = Object.keys(this.layers).filter(layer => this.layers[layer].active);
+            activeLayers.textContent = activeLayerNames.length > 0 ? activeLayerNames.join(', ') : 'None';
+        }
+    }
+    
+    toggleLayer(layerName) {
+        if (!this.layers[layerName]) return;
+        
+        this.layers[layerName].active = !this.layers[layerName].active;
+        
+        if (this.layers[layerName].active) {
+            this.createLayer(layerName);
+        } else {
+            this.removeLayer(layerName);
+        }
+        
+        this.updateInfo();
+    }
+    
+    createLayer(layerName) {
+        switch (layerName) {
+            case 'temperature':
+                this.createTemperatureLayer();
+                break;
+            case 'wind':
+                this.createWindLayer();
+                break;
+            case 'vegetation':
+                this.createVegetationLayer();
+                break;
+            case 'precipitation':
+                this.createPrecipitationLayer();
+                break;
+            case 'elevation':
+                this.createElevationLayer();
+                break;
+        }
+    }
+    
+    removeLayer(layerName) {
+        if (this.layers[layerName] && this.layers[layerName].objects) {
+            this.layers[layerName].objects.forEach(obj => {
+                this.scene.remove(obj);
+            });
+            this.layers[layerName].objects = [];
+        }
+    }
+    
+    createTemperatureLayer() {
+        // Create temperature visualization as colored overlay
+        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide
+        });
+        
+        // Create temperature gradient texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        
+        // Create temperature gradient (blue=cold, red=hot)
+        const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+        gradient.addColorStop(0, '#0000ff'); // Cold (poles)
+        gradient.addColorStop(0.3, '#00ffff'); // Cool
+        gradient.addColorStop(0.5, '#00ff00'); // Moderate
+        gradient.addColorStop(0.7, '#ffff00'); // Warm
+        gradient.addColorStop(1, '#ff0000'); // Hot (equator)
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 512, 256);
+        
+        // Add some temperature variation patterns
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(256, 128, 200, 50, 0, 0, 2 * Math.PI); // Equatorial heat
+        ctx.fill();
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        material.map = texture;
+        
+        const temperatureMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(temperatureMesh);
+        this.layers.temperature.objects.push(temperatureMesh);
+    }
+    
+    createWindLayer() {
+        // Create animated wind current lines
+        const windLines = [];
+        const windGeometry = new THREE.BufferGeometry();
+        const windPositions = [];
+        const windColors = [];
+        
+        // Generate wind current paths
+        for (let i = 0; i < 50; i++) {
+            const lat = (Math.random() - 0.5) * Math.PI;
+            const lon = Math.random() * Math.PI * 2;
+            const radius = 1.02;
+            
+            const x = radius * Math.cos(lat) * Math.cos(lon);
+            const y = radius * Math.sin(lat);
+            const z = radius * Math.cos(lat) * Math.sin(lon);
+            
+            windPositions.push(x, y, z);
+            windColors.push(0.5, 0.8, 1.0, 0.8); // Light blue with transparency
+        }
+        
+        windGeometry.setAttribute('position', new THREE.Float32BufferAttribute(windPositions, 3));
+        windGeometry.setAttribute('color', new THREE.Float32BufferAttribute(windColors, 4));
+        
+        const windMaterial = new THREE.PointsMaterial({
+            size: 0.02,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const windPoints = new THREE.Points(windGeometry, windMaterial);
+        this.scene.add(windPoints);
+        this.layers.wind.objects.push(windPoints);
+        
+        // Store reference for animation
+        windPoints.userData = { originalPositions: [...windPositions] };
+    }
+    
+    createVegetationLayer() {
+        // Create vegetation density visualization
+        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        });
+        
+        // Create vegetation texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        
+        // Base ocean color
+        ctx.fillStyle = '#000080';
+        ctx.fillRect(0, 0, 512, 256);
+        
+        // Add vegetation areas
+        ctx.fillStyle = '#228B22'; // Forest green
+        ctx.beginPath();
+        ctx.ellipse(150, 100, 80, 60, 0, 0, 2 * Math.PI); // North America
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(300, 150, 100, 80, 0, 0, 2 * Math.PI); // Europe/Africa
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(400, 120, 60, 40, 0, 0, 2 * Math.PI); // Asia
+        ctx.fill();
+        
+        // Add some grassland areas
+        ctx.fillStyle = '#9ACD32'; // Yellow green
+        ctx.beginPath();
+        ctx.ellipse(200, 180, 60, 30, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        material.map = texture;
+        
+        const vegetationMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(vegetationMesh);
+        this.layers.vegetation.objects.push(vegetationMesh);
+    }
+    
+    createPrecipitationLayer() {
+        // Create precipitation visualization
+        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.4,
+            side: THREE.DoubleSide
+        });
+        
+        // Create precipitation texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        
+        // Base transparent
+        ctx.clearRect(0, 0, 512, 256);
+        
+        // Add precipitation patterns
+        ctx.fillStyle = 'rgba(0, 100, 255, 0.6)'; // Blue for rain
+        ctx.beginPath();
+        ctx.ellipse(256, 128, 150, 80, 0, 0, 2 * Math.PI); // Tropical rain belt
+        ctx.fill();
+        
+        // Add some scattered precipitation
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            const size = Math.random() * 30 + 10;
+            
+            ctx.fillStyle = `rgba(0, 100, 255, ${Math.random() * 0.5 + 0.2})`;
+            ctx.beginPath();
+            ctx.ellipse(x, y, size, size * 0.5, 0, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        material.map = texture;
+        
+        const precipitationMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(precipitationMesh);
+        this.layers.precipitation.objects.push(precipitationMesh);
+    }
+    
+    createElevationLayer() {
+        // Create elevation visualization
+        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide
+        });
+        
+        // Create elevation texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        
+        // Base ocean color
+        ctx.fillStyle = '#000080';
+        ctx.fillRect(0, 0, 512, 256);
+        
+        // Add elevation areas (brown for mountains)
+        ctx.fillStyle = '#8B4513'; // Saddle brown
+        ctx.beginPath();
+        ctx.ellipse(200, 100, 60, 40, 0, 0, 2 * Math.PI); // Mountain ranges
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(350, 120, 80, 50, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Add some hills (lighter brown)
+        ctx.fillStyle = '#A0522D'; // Sienna
+        ctx.beginPath();
+        ctx.ellipse(150, 150, 40, 25, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        material.map = texture;
+        
+        const elevationMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(elevationMesh);
+        this.layers.elevation.objects.push(elevationMesh);
     }
     
     destroy() {
