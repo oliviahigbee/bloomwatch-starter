@@ -2455,6 +2455,11 @@ def index():
     """Main dashboard page"""
     return render_template('index.html')
 
+@app.route('/quiz')
+def quiz():
+    """Kids Quiz Corner page"""
+    return render_template('quiz.html')
+
 @app.route('/api/bloom-data')
 def get_bloom_data():
     """Get bloom data for a specific location and time range"""
