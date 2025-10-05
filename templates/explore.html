@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 Explore the World - BloomWatch Kids</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Explore amazing plants around the world with NASA satellite data!">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">🏠 Home</a>
+                <a class="nav-link active" href="#">🌍 Explore</a>
+                <a class="nav-link" href="{{ url_for('learn') }}">🎓 Learn</a>
+                <a class="nav-link" href="{{ url_for('games') }}">🎮 Games</a>
+                <a class="nav-link" href="{{ url_for('share') }}">📸 Share</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        🌍 Explore Amazing Plants Around the World! 🌍
+                    </h1>
+                    <p class="lead text-white mb-4">
+                        Use our interactive world map to discover plants and flowers from different countries! 
+                        Click on the colorful dots to learn about nature in different places! 🌱✨
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-stats">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🌍</h3>
+                                    <p class="text-white-50">Countries</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🌱</h3>
+                                    <p class="text-white-50">Plant Types</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-magic me-2"></i>🎮 Map Explorer Controls
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="citySelect" class="form-label">🌍 Choose a Place to Explore!</label>
+                                <select class="form-select" id="citySelect" onchange="updateCity()">
+                                    <option value="global">🌍 See the Whole World!</option>
+                                    <option value="new-york">🗽 New York City</option>
+                                    <option value="london">🏰 London</option>
+                                    <option value="tokyo">🗾 Tokyo</option>
+                                    <option value="sao-paulo">🌴 São Paulo</option>
+                                    <option value="sydney">🦘 Sydney</option>
+                                    <option value="cape-town">🏔️ Cape Town</option>
+                                    <option value="mumbai">🕌 Mumbai</option>
+                                    <option value="paris">🗼 Paris</option>
+                                    <option value="los-angeles">🌴 Los Angeles</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="timeRange" class="form-label">⏰ How Far Back in Time?</label>
+                                <select class="form-select" id="timeRange" onchange="updateTimeRange()">
+                                    <option value="1">📅 Last Year</option>
+                                    <option value="3">📅 Last 3 Years</option>
+                                    <option value="5" selected>📅 Last 5 Years</option>
+                                    <option value="10">📅 Last 10 Years</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="vegetationIndex" class="form-label">🌿 Plant Health Meter</label>
+                                <select class="form-select" id="vegetationIndex" onchange="updateVegetationIndex()">
+                                    <option value="ndvi" selected>🌱 Green Plant Health</option>
+                                    <option value="evi">🌿 Enhanced Plant Health</option>
+                                    <option value="savi">🌾 Soil-Adjusted Health</option>
+                                    <option value="gndvi">🌳 Green Leaf Health</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button class="btn btn-success w-100" onclick="refreshData()">
+                                        <i class="fas fa-sync-alt me-2"></i>🔄 Get New Data!
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Map Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map me-2"></i><span id="mapTitle">🌍 Amazing Plant World Map</span>
+                        </h5>
+                        <small class="text-muted" id="mapDescription">Click on the colorful dots to learn about plants in different places! 🌱</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="globalMap" style="height: 600px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fun Learning Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>💡 Fun Plant Facts!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="funFactsContainer">
+                            <div class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading fun facts about plants...
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3" onclick="showNextFact()">
+                            <i class="fas fa-arrow-right me-2"></i>🌱 Show Me Another Fact!
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>🏆 Your Exploration Achievements!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="achievementsContainer">
+                            <div class="achievement-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="achievement-icon me-3">🌍</span>
+                                    <div>
+                                        <h6 class="mb-1">World Explorer</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="achievement-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="achievement-icon me-3">🗺️</span>
+                                    <div>
+                                        <h6 class="mb-1">Map Navigator</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-info" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>🌱 BloomWatch Kids</h6>
+                    <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-rocket me-1"></i>
+                        Powered by NASA Space Data! 🌟
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/explore.js') }}"></script>
+</body>
+</html>

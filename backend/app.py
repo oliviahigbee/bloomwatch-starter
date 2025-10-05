@@ -2455,6 +2455,26 @@ def index():
     """Main dashboard page"""
     return render_template('index.html')
 
+@app.route('/explore')
+def explore():
+    """Explore page for interactive map"""
+    return render_template('explore.html')
+
+@app.route('/learn')
+def learn():
+    """Learn page for educational content"""
+    return render_template('learn.html')
+
+@app.route('/games')
+def games():
+    """Games page for interactive activities"""
+    return render_template('games.html')
+
+@app.route('/share')
+def share():
+    """Share page for citizen science observations"""
+    return render_template('share.html')
+
 @app.route('/api/bloom-data')
 def get_bloom_data():
     """Get bloom data for a specific location and time range"""

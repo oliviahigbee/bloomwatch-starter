@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 Share Your Observations - BloomWatch Kids</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Share your plant observations and photos with other kids!">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">🏠 Home</a>
+                <a class="nav-link" href="{{ url_for('explore') }}">🌍 Explore</a>
+                <a class="nav-link" href="{{ url_for('learn') }}">🎓 Learn</a>
+                <a class="nav-link" href="{{ url_for('games') }}">🎮 Games</a>
+                <a class="nav-link active" href="#">📸 Share</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        📸 Share Your Plant Discoveries! 📸
+                    </h1>
+                    <p class="lead text-white mb-4">
+                        Take photos of plants you find and share them with other kids! 
+                        Help scientists learn about plants in your area! 🌱📷✨
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-stats">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">📸</h3>
+                                    <p class="text-white-50">Photos Shared</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🌍</h3>
+                                    <p class="text-white-50">Countries</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Form -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-camera me-2"></i>📸 Share Your Plant Photo!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="shareForm" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plantName" class="form-label">
+                                            <i class="fas fa-leaf me-1"></i>🌱 What plant did you find?
+                                        </label>
+                                        <input type="text" class="form-control" id="plantName" 
+                                               placeholder="e.g., Beautiful Cherry Blossom" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="plantType" class="form-label">
+                                            <i class="fas fa-seedling me-1"></i>🌿 What type of plant is it?
+                                        </label>
+                                        <select class="form-select" id="plantType" required>
+                                            <option value="">Choose a plant type...</option>
+                                            <option value="flower">🌸 Flower</option>
+                                            <option value="tree">🌳 Tree</option>
+                                            <option value="bush">🌿 Bush</option>
+                                            <option value="grass">🌱 Grass</option>
+                                            <option value="moss">🍀 Moss</option>
+                                            <option value="fern">🌿 Fern</option>
+                                            <option value="cactus">🌵 Cactus</option>
+                                            <option value="other">🌿 Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="plantColor" class="form-label">
+                                            <i class="fas fa-palette me-1"></i>🎨 What color is it?
+                                        </label>
+                                        <select class="form-select" id="plantColor">
+                                            <option value="">Choose a color...</option>
+                                            <option value="red">🔴 Red</option>
+                                            <option value="pink">🟣 Pink</option>
+                                            <option value="yellow">🟡 Yellow</option>
+                                            <option value="orange">🟠 Orange</option>
+                                            <option value="green">🟢 Green</option>
+                                            <option value="blue">🔵 Blue</option>
+                                            <option value="purple">🟣 Purple</option>
+                                            <option value="white">⚪ White</option>
+                                            <option value="multi">🌈 Many Colors</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="yourName" class="form-label">
+                                            <i class="fas fa-user me-1"></i>👤 Your name (optional)
+                                        </label>
+                                        <input type="text" class="form-control" id="yourName" 
+                                               placeholder="e.g., Nature Explorer">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plantPhoto" class="form-label">
+                                            <i class="fas fa-camera me-1"></i>📸 Take a photo!
+                                        </label>
+                                        <input type="file" class="form-control" id="plantPhoto" 
+                                               accept="image/*" onchange="previewPhoto(this)" required>
+                                        <div class="form-text">Take a picture of the plant you found!</div>
+                                    </div>
+                                    
+                                    <div class="mb-3" id="photoPreview" style="display: none;">
+                                        <label class="form-label">📸 Photo Preview</label>
+                                        <div class="text-center">
+                                            <img id="previewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="removePhoto()">
+                                                <i class="fas fa-trash me-1"></i>Remove Photo
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="location" class="form-label">
+                                            <i class="fas fa-map-marker-alt me-1"></i>📍 Where did you find it?
+                                        </label>
+                                        <input type="text" class="form-control" id="location" 
+                                               placeholder="e.g., My backyard, Central Park" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="plantStory" class="form-label">
+                                            <i class="fas fa-comment me-1"></i>📝 Tell us about it!
+                                        </label>
+                                        <textarea class="form-control" id="plantStory" rows="3" 
+                                                  placeholder="What's special about this plant? How big is it? Any interesting details?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Great job helping scientists!</strong> Your photos help us learn about plants all around the world! 🌍✨
+                            </div>
+                            
+                            <div class="text-center">
+                                <button type="button" class="btn btn-success btn-lg" onclick="submitPhoto()">
+                                    <i class="fas fa-share me-2"></i>📸 Share My Plant Photo!
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>⭐ Photo Tips!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">📸 Get close to the plant</li>
+                            <li class="mb-2">☀️ Take photos in good light</li>
+                            <li class="mb-2">🌱 Show the whole plant if possible</li>
+                            <li class="mb-2">🎨 Make sure colors look natural</li>
+                            <li class="mb-2">📝 Write a fun description!</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>🏆 Sharing Achievements
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="achievement-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="achievement-icon me-3">📸</span>
+                                <div>
+                                    <h6 class="mb-1">First Photo</h6>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-success">Unlocked! 🎉</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievement-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="achievement-icon me-3">🌍</span>
+                                <div>
+                                    <h6 class="mb-1">Global Explorer</h6>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-info" style="width: 40%"></div>
+                                    </div>
+                                    <small class="text-muted">2/5 photos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="d-flex align-items-center">
+                                <span class="achievement-icon me-3">🔬</span>
+                                <div>
+                                    <h6 class="mb-1">Citizen Scientist</h6>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: 20%"></div>
+                                    </div>
+                                    <small class="text-muted">1/10 photos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Photos Gallery -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">📸 Recent Plant Photos from Kids! 📸</h2>
+            </div>
+        </div>
+        
+        <div class="row" id="photoGallery">
+            <!-- Photos will be loaded here -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <div class="card-body">
+                        <h6 class="card-title">🌸 Cherry Blossom</h6>
+                        <p class="card-text">Beautiful pink flowers in spring!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">by Nature Explorer</small>
+                            <small class="text-muted">📍 Tokyo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <div class="card-body">
+                        <h6 class="card-title">🌻 Sunflower</h6>
+                        <p class="card-text">Tall and bright yellow!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">by Plant Lover</small>
+                            <small class="text-muted">📍 Kansas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <div class="card-body">
+                        <h6 class="card-title">🌹 Rose</h6>
+                        <p class="card-text">Red and very pretty!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">by Garden Kid</small>
+                            <small class="text-muted">📍 London</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" onclick="loadMorePhotos()">
+                <i class="fas fa-plus me-2"></i>📸 Load More Photos
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>🌱 BloomWatch Kids</h6>
+                    <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-rocket me-1"></i>
+                        Powered by NASA Space Data! 🌟
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/share.js') }}"></script>
+</body>
+</html>
