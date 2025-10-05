@@ -104,24 +104,81 @@ class ExploreApp {
         }
     }
     
-    showPlantInfo(latlng) {
-        const popup = L.popup()
+    async showPlantInfo(latlng) {
+        const lat = latlng.lat.toFixed(4);
+        const lng = latlng.lng.toFixed(4);
+        
+        // Show loading popup
+        const loadingPopup = L.popup()
             .setLatLng(latlng)
             .setContent(`
                 <div class="plant-info-popup">
-                    <h6>🌱 Plant Discovery!</h6>
-                    <p>You found a new location!</p>
-                    <p><strong>Coordinates:</strong><br>
-                    Latitude: ${latlng.lat.toFixed(4)}<br>
-                    Longitude: ${latlng.lng.toFixed(4)}</p>
-                    <button class="btn btn-sm btn-success" onclick="exploreApp.addCustomMarker(${latlng.lat}, ${latlng.lng})">
-                        🌱 Add Plant Here!
-                    </button>
+                    <h6>🛰️ Getting NASA Data...</h6>
+                    <p><i class="fas fa-spinner fa-spin"></i> Loading real satellite data from space!</p>
                 </div>
             `)
             .openOn(this.map);
+        
+        try {
+            // Get real NASA data
+            const response = await fetch(`/api/bloom-data?lat=${lat}&lon=${lng}`);
+            const data = await response.json();
             
-        this.updateAchievement('worldExplorer');
+            // Create popup with real NASA data
+            const popup = L.popup()
+                .setLatLng(latlng)
+                .setContent(`
+                    <div class="plant-info-popup">
+                        <h6>🛰️ NASA Satellite Data</h6>
+                        <p><strong>Location:</strong> ${lat}, ${lng}</p>
+                        <p><strong>Data Source:</strong> ${data.data_availability}</p>
+                        ${data.satellite_imagery ? `
+                            <p><strong>🛰️ Satellite:</strong> ${data.satellite_imagery.data_source}</p>
+                            <p><strong>📅 Date:</strong> ${data.satellite_imagery.date}</p>
+                        ` : ''}
+                        ${data.data && data.data.length > 0 ? `
+                            <p><strong>🌱 Plant Health:</strong> ${this.getHealthStatus(data.data[0])}</p>
+                        ` : ''}
+                        <p><strong>🚀 Fun Fact:</strong> This data comes from NASA satellites in space!</p>
+                        <button class="btn btn-sm btn-success" onclick="exploreApp.addCustomMarker(${lat}, ${lng})">
+                            🌱 Add Plant Here!
+                        </button>
+                    </div>
+                `)
+                .openOn(this.map);
+            
+            // Update achievements
+            this.updateAchievement('worldExplorer');
+            
+            // Update the plant health scoreboard with real data
+            this.updatePlantHealthScoreboard(lat, lng, data);
+            
+        } catch (error) {
+            console.error('Error fetching NASA data:', error);
+            // Fallback popup
+            const popup = L.popup()
+                .setLatLng(latlng)
+                .setContent(`
+                    <div class="plant-info-popup">
+                        <h6>🌱 Plant Discovery!</h6>
+                        <p>You found a new location!</p>
+                        <p><strong>Coordinates:</strong><br>
+                        Latitude: ${lat}<br>
+                        Longitude: ${lng}</p>
+                        <button class="btn btn-sm btn-success" onclick="exploreApp.addCustomMarker(${lat}, ${lng})">
+                            🌱 Add Plant Here!
+                        </button>
+                    </div>
+                `)
+                .openOn(this.map);
+        }
+    }
+    
+    getHealthStatus(dataPoint) {
+        if (dataPoint.ndvi > 0.7) return '🌿 Excellent';
+        if (dataPoint.ndvi > 0.5) return '🌱 Good';
+        if (dataPoint.ndvi > 0.3) return '🍃 Fair';
+        return '🌾 Needs Attention';
     }
     
     addCustomMarker(lat, lng) {
@@ -173,10 +230,30 @@ class ExploreApp {
         }, 2000);
     }
     
-    loadFunFacts() {
+    async loadFunFacts() {
         const container = document.getElementById('funFactsContainer');
-        const currentFact = this.funFacts[this.currentFactIndex];
         
+        // Try to get NASA space facts
+        try {
+            const response = await fetch('/api/nasa-space-facts');
+            const nasaFact = await response.json();
+            
+            if (nasaFact.data_availability === 'real_nasa_data') {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-rocket me-2"></i>
+                        <strong>🚀 NASA Space Fact:</strong> ${nasaFact.space_fact.fact}
+                        <br><small class="text-muted">${nasaFact.space_fact.emoji} ${nasaFact.space_fact.related_to_blooms ? 'Related to plants!' : ''}</small>
+                    </div>
+                `;
+                return;
+            }
+        } catch (error) {
+            console.log('NASA space facts not available, using local facts');
+        }
+        
+        // Fallback to local facts
+        const currentFact = this.funFacts[this.currentFactIndex];
         container.innerHTML = `
             <div class="alert alert-info">
                 <i class="fas fa-lightbulb me-2"></i>
@@ -299,6 +376,52 @@ class ExploreApp {
                 notification.remove();
             }
         }, 3000);
+    }
+    
+    updatePlantHealthScoreboard(lat, lng, nasaData = null) {
+        // Update the plant health scoreboard with real NASA data
+        if (nasaData && nasaData.data && nasaData.data.length > 0) {
+            const latestData = nasaData.data[nasaData.data.length - 1];
+            const healthScore = Math.round((latestData.ndvi || 0.5) * 100);
+            
+            // Update the progress bar
+            const progressBar = document.querySelector('#plantHealthProgress .progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${healthScore}%`;
+                progressBar.textContent = `${healthScore}%`;
+                
+                // Update color based on health
+                if (healthScore >= 70) {
+                    progressBar.className = 'progress-bar bg-success';
+                } else if (healthScore >= 50) {
+                    progressBar.className = 'progress-bar bg-warning';
+                } else {
+                    progressBar.className = 'progress-bar bg-danger';
+                }
+            }
+            
+            // Update other metrics if they exist
+            const peakSeason = document.getElementById('peakSeason');
+            if (peakSeason) {
+                peakSeason.textContent = nasaData.satellite_imagery ? 
+                    `🛰️ Real NASA Data (${nasaData.satellite_imagery.date})` : 
+                    '🌱 Spring';
+            }
+            
+            // Show NASA data source
+            this.showNotification(
+                `🛰️ Real NASA satellite data loaded for ${lat}, ${lng}! Data source: ${nasaData.data_availability}`,
+                'success'
+            );
+        } else {
+            // Fallback to default values
+            const progressBar = document.querySelector('#plantHealthProgress .progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '75%';
+                progressBar.textContent = '75%';
+                progressBar.className = 'progress-bar bg-success';
+            }
+        }
     }
 }
 
