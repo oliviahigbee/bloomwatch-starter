@@ -262,10 +262,11 @@
 
     <!-- Analysis Section -->
     <div class="container my-5" id="analysisSection">
-        <div class="row">
+        <!-- Chart and Metrics Row -->
+        <div class="row mb-4">
             <!-- Time Series Chart -->
-            <div class="col-lg-10">
-                <div class="card shadow mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow h-100">
                     <div class="card-header bg-light text-center">
                         <h5 class="mb-0">📈 How Plants Grow Over Time!</h5>
                     </div>
@@ -276,38 +277,38 @@
             </div>
             
             <!-- Key Metrics -->
-            <div class="col-lg-2">
-                <div class="card shadow mb-4">
+            <div class="col-lg-4">
+                <div class="card shadow h-100">
                     <div class="card-header bg-light text-center">
                         <h5 class="mb-0">📊 Plant Health Scoreboard!</h5>
                     </div>
                     <div class="card-body">
                         <div class="metric-item mb-3">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span>🌱 How Green Are the Plants?</span>
                                 <span class="fw-bold" id="currentIntensity">-</span>
                             </div>
-                            <div class="progress mt-1">
+                            <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-success" id="intensityBar" style="width: 0%"></div>
                             </div>
                         </div>
                         
                         <div class="metric-item mb-3">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <span>🌸 Best Blooming Day</span>
                                 <span class="fw-bold" id="peakDate">-</span>
                             </div>
                         </div>
                         
                         <div class="metric-item mb-3">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <span>📈 Are Plants Growing More?</span>
                                 <span class="fw-bold" id="trend">-</span>
                             </div>
                         </div>
                         
                         <div class="metric-item">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <span>🌺 Best Season for Flowers</span>
                                 <span class="fw-bold" id="peakSeason">-</span>
                             </div>
@@ -317,44 +318,75 @@
             </div>
         </div>
         
-        <!-- AI & Advanced Analytics -->
+        <!-- Citizen Science & NASA Attribution Row -->
         <div class="row mb-4">
+            <!-- Citizen Science Observations -->
             <div class="col-lg-8">
-                <div class="card shadow" id="predictionCard" style="display: none;">
-                    <!-- AI Prediction content will be loaded here -->
+                <div class="card shadow h-100">
+                    <div class="card-header bg-success text-white text-center">
+                        <h5 class="mb-0">🌱 Citizen Science Observations</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center mb-4">Help us track blooms worldwide! Submit your observations.</p>
+                        <div id="citizenObservationsList">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading citizen observations...
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('share') }}" class="btn btn-success">
+                                📸 Share Your Plant Photos!
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- NASA Attribution & Resources -->
             <div class="col-lg-4">
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <div class="card shadow" id="anomaliesCard" style="display: none;">
-                            <!-- Anomaly detection content will be loaded here -->
-                        </div>
+                <div class="card shadow h-100">
+                    <div class="card-header bg-info text-white text-center">
+                        <h5 class="mb-0">🚀 NASA Resources</h5>
                     </div>
-                    <div class="col-12">
-                        <div class="card shadow" id="climateCard" style="display: none;">
-                            <!-- Climate correlation content will be loaded here -->
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="card shadow" id="nasaAttributionCard" style="display: none;">
-                            <!-- NASA data attribution will be loaded here -->
+                    <div class="card-body">
+                        <h6 class="text-primary mb-3">📊 Data Sources</h6>
+                        <p class="small mb-3">Climate and weather data for renewable energy applications</p>
+                        <p class="small mb-3"><strong>Provider:</strong> NASA Langley Research Center</p>
+                        
+                        <h6 class="text-primary mb-3">📋 Usage Terms</h6>
+                        <p class="small mb-2">NASA data is freely available for research and educational purposes</p>
+                        <p class="small mb-2"><strong>Attribution:</strong> Data provided by NASA Earth Science Data Systems</p>
+                        <p class="small mb-3"><strong>Disclaimer:</strong> This application uses NASA data for demonstration purposes</p>
+                        
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                📅 Last updated: <span id="lastUpdateTime">-</span>
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Citizen Science & 3D Visualization -->
-        <div class="row mb-4">
-            <div class="col-lg-6">
-                <div class="card shadow" id="citizenCard" style="display: none;">
-                    <!-- Citizen science content will be loaded here -->
+        <!-- Hidden AI & Advanced Analytics (for future use) -->
+        <div class="row mb-4" style="display: none;">
+            <div class="col-lg-8">
+                <div class="card shadow" id="predictionCard">
+                    <!-- AI Prediction content will be loaded here -->
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card shadow" id="globeCard" style="display: none;">
-                    <!-- 3D Globe content will be loaded here -->
+            <div class="col-lg-4">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="card shadow" id="anomaliesCard">
+                            <!-- Anomaly detection content will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow" id="climateCard">
+                            <!-- Climate correlation content will be loaded here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
