@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌱 BloomWatch - Learn About Plants & Nature!</title>
+    <title>🌱 Little Sprouts - Learn About Plants & Nature!</title>
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="Fun educational app for kids to learn about plants, nature, and conservation using real NASA data!">
     <meta name="theme-color" content="#4CAF50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="BloomWatch">
+    <meta name="apple-mobile-web-app-title" content="Little Sprouts">
     <meta name="msapplication-TileColor" content="#28a745">
     <meta name="msapplication-config" content="/browserconfig.xml">
     
@@ -64,7 +64,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="#">
-                🌱 BloomWatch
+                <span class="brand-title">🌱 Little Sprouts</span>
+                <span class="brand-slogan">- where young minds grow!</span>
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link active" href="{{ url_for('index') }}">🏠 Home</a>
@@ -549,7 +550,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h6>🌱 BloomWatch</h6>
+                    <h6>🌱 Little Sprouts</h6>
                     <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -1095,6 +1096,18 @@
     
     <!-- NASA Feature Card Styling -->
     <style>
+        /* Brand styling */
+        .brand-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+        
+        .brand-slogan {
+            font-size: 1.3rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+        
         .nasa-feature-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 2px solid transparent;
@@ -1193,7 +1206,7 @@
         });
     </script>
 
-    <!-- Loads Fun Plant Facts -->
+    <!-- Loads Cool Plant Facts -->
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const insightsList = document.getElementById("insightsList");

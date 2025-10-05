@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 Fun Games - BloomWatch</title>
+    <title>🎮 Fun Games - Little Sprouts</title>
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="Play fun games and learn about plants and nature!">
@@ -23,7 +23,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                🌱 BloomWatch
+                <span class="brand-title">🌱 Little Sprouts</span>
+                <span class="brand-slogan">- where young minds grow!</span>
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{{ url_for('index') }}">🏠 Home</a>
@@ -322,7 +323,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h6>🌱 BloomWatch</h6>
+                    <h6>🌱 Little Sprouts</h6>
                     <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -337,5 +338,19 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/games.js') }}"></script>
+    
+    <!-- Brand styling -->
+    <style>
+        .brand-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+        
+        .brand-slogan {
+            font-size: 1.3rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+    </style>
 </body>
 </html>
