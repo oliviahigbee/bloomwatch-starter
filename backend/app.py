@@ -2581,9 +2581,10 @@ def get_nasa_apod():
             data = response.json()
             return jsonify({
                 'data_availability': 'real_nasa_data',
-                'title': data.get('title', ''),
+                'title': data.get('title', 'Astronomy Picture of the Day'),
                 'explanation': data.get('explanation', ''),
-                'url': data.get('url', ''),
+                'image_url': data.get('url', ''),
+                'hd_image_url': data.get('hdurl', ''),
                 'date': data.get('date', ''),
                 'media_type': data.get('media_type', ''),
                 'copyright': data.get('copyright', ''),
@@ -2597,14 +2598,38 @@ def get_nasa_apod():
         else:
             return jsonify({
                 'data_availability': 'simulated_nasa_data',
+                'title': 'Astronomy Picture of the Day',
+                'explanation': 'NASA\'s Astronomy Picture of the Day features amazing images of our universe! This is a simulated response while we work on connecting to the real NASA API.',
+                'image_url': 'https://apod.nasa.gov/apod/image/2401/aurora_spiral_graham_960.jpg',
+                'hd_image_url': 'https://apod.nasa.gov/apod/image/2401/aurora_spiral_graham_2400.jpg',
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'media_type': 'image',
+                'copyright': 'NASA',
+                'nasa_metadata': {
+                    'data_source': 'Simulated NASA APOD',
+                    'kid_friendly': True,
+                    'educational_value': 'High - Simulated space imagery'
+                },
                 'error': f'NASA APOD API error: {response.status_code}',
-                'message': 'NASA APOD API unavailable'
+                'message': 'Using simulated APOD data'
             })
     except Exception as e:
         return jsonify({
             'data_availability': 'simulated_nasa_data',
+            'title': 'Astronomy Picture of the Day',
+            'explanation': 'NASA\'s Astronomy Picture of the Day features amazing images of our universe! This is a simulated response while we work on connecting to the real NASA API.',
+            'image_url': 'https://apod.nasa.gov/apod/image/2401/aurora_spiral_graham_960.jpg',
+            'hd_image_url': 'https://apod.nasa.gov/apod/image/2401/aurora_spiral_graham_2400.jpg',
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'media_type': 'image',
+            'copyright': 'NASA',
+            'nasa_metadata': {
+                'data_source': 'Simulated NASA APOD',
+                'kid_friendly': True,
+                'educational_value': 'High - Simulated space imagery'
+            },
             'error': str(e),
-            'message': 'NASA APOD API request failed'
+            'message': 'Using simulated APOD data'
         })
 
 @app.route('/api/nasa-space-facts')
