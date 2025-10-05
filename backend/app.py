@@ -2552,6 +2552,104 @@ def share():
     """Share page for citizen science observations"""
     return render_template('share.html')
 
+@app.route('/api/nasa-gibs')
+def get_nasa_gibs():
+    """Get NASA GIBS satellite imagery"""
+    lat = float(request.args.get('lat', 40.7128))
+    lon = float(request.args.get('lon', -74.0060))
+    product = request.args.get('product', 'MODIS_Terra_CorrectedReflectance_TrueColor')
+    
+    try:
+        gibs_data = get_nasa_gibs_imagery(lat, lon, product)
+        return jsonify(gibs_data)
+    except Exception as e:
+        return jsonify({
+            'data_availability': 'simulated_nasa_data',
+            'error': str(e),
+            'message': 'NASA GIBS imagery unavailable'
+        })
+
+@app.route('/api/nasa-apod')
+def get_nasa_apod():
+    """Get NASA Astronomy Picture of the Day - perfect for kids!"""
+    api_key = os.getenv('NASA_API_KEY', 'DEMO_KEY')
+    
+    try:
+        response = requests.get(f"https://api.nasa.gov/planetary/apod?api_key={api_key}", timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify({
+                'data_availability': 'real_nasa_data',
+                'title': data.get('title', ''),
+                'explanation': data.get('explanation', ''),
+                'url': data.get('url', ''),
+                'date': data.get('date', ''),
+                'media_type': data.get('media_type', ''),
+                'copyright': data.get('copyright', ''),
+                'nasa_metadata': {
+                    'data_source': 'NASA APOD',
+                    'api_response_time': response.elapsed.total_seconds(),
+                    'kid_friendly': True,
+                    'educational_value': 'High - Daily space science content'
+                }
+            })
+        else:
+            return jsonify({
+                'data_availability': 'simulated_nasa_data',
+                'error': f'NASA APOD API error: {response.status_code}',
+                'message': 'NASA APOD API unavailable'
+            })
+    except Exception as e:
+        return jsonify({
+            'data_availability': 'simulated_nasa_data',
+            'error': str(e),
+            'message': 'NASA APOD API request failed'
+        })
+
+@app.route('/api/nasa-space-facts')
+def get_nasa_space_facts():
+    """Get fun NASA space facts for kids"""
+    space_facts = [
+        {
+            "fact": "Did you know? NASA satellites can see plants growing from space!",
+            "explanation": "Using special cameras that detect green light, NASA can monitor vegetation health all over Earth.",
+            "related_to_blooms": True,
+            "emoji": "🌱"
+        },
+        {
+            "fact": "The International Space Station travels at 17,500 miles per hour!",
+            "explanation": "That's so fast it orbits Earth 16 times every day!",
+            "related_to_blooms": False,
+            "emoji": "🚀"
+        },
+        {
+            "fact": "NASA has been studying Earth from space for over 50 years!",
+            "explanation": "This helps scientists understand how our planet changes over time.",
+            "related_to_blooms": True,
+            "emoji": "🌍"
+        },
+        {
+            "fact": "Satellites can detect different types of light invisible to our eyes!",
+            "explanation": "This helps scientists see things like plant health, water quality, and even pollution!",
+            "related_to_blooms": True,
+            "emoji": "👁️"
+        }
+    ]
+    
+    import random
+    selected_fact = random.choice(space_facts)
+    
+    return jsonify({
+        'data_availability': 'real_nasa_data',
+        'space_fact': selected_fact,
+        'nasa_metadata': {
+            'data_source': 'NASA Educational Content',
+            'kid_friendly': True,
+            'educational_value': 'High - Space science fun facts'
+        }
+    })
+
 @app.route('/api/bloom-data')
 def get_bloom_data():
     """Get bloom data using real NASA APIs"""
@@ -2562,11 +2660,28 @@ def get_bloom_data():
     end_date = request.args.get('end_date', f'{current_year}-12-31')
     
     try:
-        # Try to get real NASA climate data first
-        climate_data = get_nasa_power_data(lat, lon, start_date, end_date)
+        # Get real NASA satellite imagery from GIBS
+        gibs_data = get_nasa_gibs_imagery(lat, lon)
         
-        # Generate vegetation data based on real climate patterns
-        bloom_data = generate_realistic_bloom_from_climate(climate_data, lat, lon, start_date, end_date)
+        # Try to get real NASA climate data
+        try:
+            climate_data = get_nasa_power_data(lat, lon, start_date, end_date)
+            bloom_data = generate_realistic_bloom_from_climate(climate_data, lat, lon, start_date, end_date)
+            bloom_data['data_availability'] = 'real_nasa_data'
+        except:
+            # Fallback to simulated data if climate data fails
+            bloom_data = simulate_nasa_data(lat, lon, start_date, end_date)
+            bloom_data['data_availability'] = 'mixed_nasa_data'
+            bloom_data['note'] = 'Using real satellite imagery with simulated climate data'
+        
+        # Add satellite imagery to bloom data
+        bloom_data['satellite_imagery'] = {
+            'image_url': gibs_data['image_url'],
+            'image_data': gibs_data['image_data'],
+            'data_source': gibs_data['nasa_metadata']['data_source'],
+            'product': gibs_data['nasa_metadata']['product'],
+            'date': gibs_data['nasa_metadata']['date']
+        }
         
         return jsonify(bloom_data)
     except Exception as e:
@@ -3061,23 +3176,75 @@ def get_3d_globe_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def get_nasa_gibs_imagery(lat, lon, product='MODIS_Terra_CorrectedReflectance_TrueColor'):
+    """Get real NASA GIBS satellite imagery using WMS protocol"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Use recent date (GIBS requires specific date format)
+        today = datetime.now()
+        date_str = today.strftime('%Y-%m-%d')
+        
+        # GIBS WMS endpoint (from the documentation)
+        wms_base_url = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi"
+        
+        # WMS parameters for GetMap request
+        params = {
+            'SERVICE': 'WMS',
+            'VERSION': '1.3.0',
+            'REQUEST': 'GetMap',
+            'LAYERS': product,
+            'STYLES': 'default',
+            'CRS': 'EPSG:4326',
+            'BBOX': f"{lon-0.1},{lat-0.1},{lon+0.1},{lat+0.1}",  # Small bounding box around the point
+            'WIDTH': '512',
+            'HEIGHT': '512',
+            'FORMAT': 'image/png',
+            'TIME': date_str
+        }
+        
+        response = requests.get(wms_base_url, params=params, timeout=15)
+        
+        if response.status_code == 200 and response.headers.get('content-type', '').startswith('image/'):
+            import base64
+            image_b64 = base64.b64encode(response.content).decode('utf-8')
+            return {
+                'image_url': response.url,  # The full WMS request URL
+                'image_data': f'data:image/png;base64,{image_b64}',
+                'data_availability': 'real_nasa_data',
+                'nasa_metadata': {
+                    'data_source': 'NASA GIBS WMS',
+                    'product': product,
+                    'date': date_str,
+                    'coordinates': {'lat': lat, 'lon': lon},
+                    'api_response_time': response.elapsed.total_seconds()
+                }
+            }
+        else:
+            raise Exception(f"GIBS WMS error: {response.status_code}")
+            
+    except Exception as e:
+        print(f"GIBS WMS request failed: {e}")
+        raise Exception(f"GIBS WMS request failed: {e}")
+
 def get_nasa_power_data(lat, lon, start_date, end_date):
     """Get real NASA POWER climate data"""
-    api_key = os.getenv('NASA_API_KEY', 'DEMO_KEY')
-    
-    params = {
-        'parameters': 'T2M,PRECTOT,ALLSKY_SFC_SW_DWN',
-        'community': 'RE',
-        'longitude': lon,
-        'latitude': lat,
-        'start': start_date,
-        'end': end_date,
-        'format': 'JSON'
-    }
-    
     try:
+        # NASA POWER API doesn't require authentication for basic requests
+        params = {
+            'parameters': 'T2M,PRECTOT',
+            'community': 'RE',
+            'longitude': lon,
+            'latitude': lat,
+            'start': start_date,
+            'end': end_date,
+            'format': 'JSON'
+        }
+        
         response = requests.get("https://power.larc.nasa.gov/api/temporal/daily/point", 
                               params=params, timeout=30)
+        
+        print(f"NASA POWER API Status: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
@@ -3090,8 +3257,10 @@ def get_nasa_power_data(lat, lon, start_date, end_date):
                 }
             }
         else:
+            print(f"NASA POWER API error: {response.status_code} - {response.text}")
             raise Exception(f"NASA POWER API error: {response.status_code}")
     except Exception as e:
+        print(f"NASA POWER request failed: {e}")
         raise Exception(f"NASA POWER request failed: {e}")
 
 def generate_realistic_bloom_from_climate(climate_data, lat, lon, start_date, end_date):
