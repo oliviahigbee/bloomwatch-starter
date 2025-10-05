@@ -18,6 +18,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score
 import xgboost as xgb
 import warnings
+import mimetypes
+import io
+from werkzeug.utils import secure_filename
+from PIL import Image
 warnings.filterwarnings('ignore')
 
 # Load environment variables
@@ -27,6 +31,79 @@ app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
 # Performance optimization
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year cache for static files
+
+# File upload security configuration
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB limit
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_file_type(file):
+    """Validate file type using MIME type and extension"""
+    if not file or not file.filename:
+        return False, "No file provided"
+    
+    # Check file extension
+    if not allowed_file(file.filename):
+        return False, f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+    
+    # Check MIME type
+    mime_type = mimetypes.guess_type(file.filename)[0]
+    if mime_type not in ALLOWED_MIME_TYPES:
+        return False, f"Invalid MIME type: {mime_type}"
+    
+    return True, "Valid file type"
+
+def validate_file_size(file):
+    """Validate file size"""
+    if not file:
+        return False, "No file provided"
+    
+    file.seek(0, 2)  # Seek to end
+    file_size = file.tell()
+    file.seek(0)  # Reset to beginning
+    
+    if file_size > MAX_FILE_SIZE:
+        return False, f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
+    
+    return True, "Valid file size"
+
+def validate_image_content(file):
+    """Validate that the file is actually a valid image"""
+    if not file:
+        return False, "No file provided"
+    
+    try:
+        # Read file content
+        file_content = file.read()
+        file.seek(0)  # Reset file pointer
+        
+        # Try to open as image
+        image = Image.open(io.BytesIO(file_content))
+        
+        # Verify it's a valid image format
+        image.verify()
+        
+        return True, "Valid image content"
+    except Exception as e:
+        return False, f"Invalid image content: {str(e)}"
+
+def generate_secure_filename(original_filename):
+    """Generate a secure filename with UUID and validated extension"""
+    if not original_filename:
+        return f"{uuid.uuid4().hex}.jpg"
+    
+    # Get secure extension
+    ext = secure_filename(original_filename).rsplit('.', 1)[1].lower() if '.' in original_filename else 'jpg'
+    if ext not in ALLOWED_EXTENSIONS:
+        ext = 'jpg'  # Default fallback
+    
+    # Generate UUID-based filename
+    return f"{uuid.uuid4().hex}.{ext}"
 
 # Advanced caching system
 class AdvancedCache:
@@ -2865,18 +2942,36 @@ def citizen_science():
                     'location': request.form.get('location')
                 }
                 
-                # Handle image upload
+                # Handle image upload with security validation
                 image_url = None
                 if 'image' in request.files:
                     image_file = request.files['image']
                     if image_file and image_file.filename:
+                        # Security validation
+                        # 1. Validate file type
+                        is_valid_type, type_message = validate_file_type(image_file)
+                        if not is_valid_type:
+                            return jsonify({'error': f'File validation failed: {type_message}'}), 400
+                        
+                        # 2. Validate file size
+                        is_valid_size, size_message = validate_file_size(image_file)
+                        if not is_valid_size:
+                            return jsonify({'error': f'File validation failed: {size_message}'}), 400
+                        
+                        # 3. Validate image content
+                        is_valid_content, content_message = validate_image_content(image_file)
+                        if not is_valid_content:
+                            return jsonify({'error': f'File validation failed: {content_message}'}), 400
+                        
                         # Create uploads directory if it doesn't exist
                         upload_dir = os.path.join(app.static_folder, 'uploads')
                         os.makedirs(upload_dir, exist_ok=True)
                         
-                        # Generate unique filename
-                        filename = f"{uuid.uuid4().hex}_{image_file.filename}"
+                        # Generate secure filename
+                        filename = generate_secure_filename(image_file.filename)
                         filepath = os.path.join(upload_dir, filename)
+                        
+                        # Save the file
                         image_file.save(filepath)
                         image_url = f"/static/uploads/{filename}"
             
