@@ -2455,12 +2455,6 @@ def index():
     """Main dashboard page"""
     return render_template('index.html')
 
-<<<<<<< HEAD
-@app.route('/quiz')
-def quiz():
-    """Kids Quiz Corner page"""
-    return render_template('quiz.html')
-=======
 @app.route('/explore')
 def explore():
     """Explore page for interactive map"""
@@ -2480,7 +2474,6 @@ def games():
 def share():
     """Share page for citizen science observations"""
     return render_template('share.html')
->>>>>>> Gage/frontend-fixes-&-Design
 
 @app.route('/api/bloom-data')
 def get_bloom_data():
