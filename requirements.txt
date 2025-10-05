@@ -25,3 +25,4 @@ plotly
 dash
 redis
 celery
+google-search-results

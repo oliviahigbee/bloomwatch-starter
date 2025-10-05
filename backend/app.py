@@ -22,6 +22,7 @@ import mimetypes
 import io
 from werkzeug.utils import secure_filename
 from PIL import Image
+from serpapi import GoogleSearch
 warnings.filterwarnings('ignore')
 
 # Load environment variables
@@ -133,6 +134,9 @@ cache = AdvancedCache()
 NASA_API_KEY = os.getenv('NASA_API_KEY', 'DEMO_KEY')
 EARTHDATA_USERNAME = os.getenv('EARTHDATA_USERNAME', '')
 EARTHDATA_PASSWORD = os.getenv('EARTHDATA_PASSWORD', '')
+
+# SerpApi configuration
+SERPAPI_KEY = os.getenv('SERPAPI_KEY', '')
 
 # NASA Data Sources
 NASA_POWER_API_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
@@ -1190,6 +1194,187 @@ class NASADataIntegrator:
                 'disclaimer': 'This application uses NASA data for demonstration purposes'
             },
             'last_updated': datetime.now().isoformat()
+        }
+
+class PlantDiscoveryService:
+    """SerpApi-powered service for plant news, recipes, and educational content"""
+    
+    def __init__(self):
+        self.api_key = SERPAPI_KEY
+        self.cache = {}
+        self.cache_ttl = 3600  # 1 hour cache
+    
+    def get_plant_news(self, limit=5):
+        """Fetch recent plant science news and discoveries"""
+        cache_key = f"plant_news_{limit}"
+        
+        # Check cache first
+        if cache_key in self.cache:
+            cached_data, timestamp = self.cache[cache_key]
+            if time.time() - timestamp < self.cache_ttl:
+                return cached_data
+        
+        try:
+            if not self.api_key:
+                return self._get_fallback_plant_news(limit)
+            
+            # Search for recent plant science news
+            search_params = {
+                "q": "plant science discoveries 2024 OR botanical research news OR plant bloom discoveries",
+                "api_key": self.api_key,
+                "num": limit,
+                "tbs": "qdr:w",  # Past week
+                "safe": "active"
+            }
+            
+            search = GoogleSearch(search_params)
+            results = search.get_dict()
+            
+            if "organic_results" in results:
+                news_items = []
+                for item in results["organic_results"][:limit]:
+                    news_items.append({
+                        "title": item.get("title", ""),
+                        "link": item.get("link", ""),
+                        "snippet": item.get("snippet", ""),
+                        "source": item.get("displayed_link", ""),
+                        "date": item.get("date", "")
+                    })
+                
+                response_data = {
+                    "news_items": news_items,
+                    "total_results": len(news_items),
+                    "data_source": "SerpApi Google Search",
+                    "last_updated": datetime.now().isoformat()
+                }
+                
+                # Cache the results
+                self.cache[cache_key] = (response_data, time.time())
+                return response_data
+            
+        except Exception as e:
+            print(f"SerpApi plant news search failed: {e}")
+        
+        return self._get_fallback_plant_news(limit)
+    
+    def get_plant_recipes_and_uses(self, plant_name, limit=5):
+        """Search for recipes and uses of specific plants"""
+        cache_key = f"plant_recipes_{plant_name}_{limit}"
+        
+        # Check cache first
+        if cache_key in self.cache:
+            cached_data, timestamp = self.cache[cache_key]
+            if time.time() - timestamp < self.cache_ttl:
+                return cached_data
+        
+        try:
+            if not self.api_key:
+                return self._get_fallback_plant_recipes(plant_name, limit)
+            
+            # Search for plant recipes and uses
+            search_params = {
+                "q": f"{plant_name} recipes OR {plant_name} uses OR {plant_name} medicinal OR {plant_name} cooking",
+                "api_key": self.api_key,
+                "num": limit,
+                "safe": "active"
+            }
+            
+            search = GoogleSearch(search_params)
+            results = search.get_dict()
+            
+            if "organic_results" in results:
+                recipe_items = []
+                for item in results["organic_results"][:limit]:
+                    recipe_items.append({
+                        "title": item.get("title", ""),
+                        "link": item.get("link", ""),
+                        "snippet": item.get("snippet", ""),
+                        "source": item.get("displayed_link", ""),
+                        "type": "recipe" if "recipe" in item.get("title", "").lower() else "information"
+                    })
+                
+                response_data = {
+                    "plant_name": plant_name,
+                    "recipe_items": recipe_items,
+                    "total_results": len(recipe_items),
+                    "data_source": "SerpApi Google Search",
+                    "last_updated": datetime.now().isoformat()
+                }
+                
+                # Cache the results
+                self.cache[cache_key] = (response_data, time.time())
+                return response_data
+            
+        except Exception as e:
+            print(f"SerpApi plant recipes search failed: {e}")
+        
+        return self._get_fallback_plant_recipes(plant_name, limit)
+    
+    def _get_fallback_plant_news(self, limit):
+        """Fallback plant news when SerpApi is unavailable"""
+        fallback_news = [
+            {
+                "title": "New Study Reveals How Plants Communicate Through Underground Networks",
+                "link": "https://example.com/plant-communication",
+                "snippet": "Scientists discover fascinating underground communication systems between plants using fungal networks.",
+                "source": "Nature.com",
+                "date": "Recent"
+            },
+            {
+                "title": "Climate Change Affecting Plant Blooming Seasons Worldwide",
+                "link": "https://example.com/climate-blooms",
+                "snippet": "Research shows significant shifts in plant blooming patterns due to global climate changes.",
+                "source": "Science Daily",
+                "date": "Recent"
+            },
+            {
+                "title": "New Species of Flowering Plant Discovered in Amazon Rainforest",
+                "link": "https://example.com/new-species",
+                "snippet": "Botanists discover a new species of flowering plant with unique blooming characteristics.",
+                "source": "Botanical Journal",
+                "date": "Recent"
+            }
+        ]
+        
+        return {
+            "news_items": fallback_news[:limit],
+            "total_results": len(fallback_news[:limit]),
+            "data_source": "Curated Plant Science News (SerpApi Unavailable)",
+            "last_updated": datetime.now().isoformat()
+        }
+    
+    def _get_fallback_plant_recipes(self, plant_name, limit):
+        """Fallback plant recipes when SerpApi is unavailable"""
+        fallback_recipes = [
+            {
+                "title": f"Traditional Uses of {plant_name} in Herbal Medicine",
+                "link": "https://example.com/herbal-uses",
+                "snippet": f"Discover the traditional medicinal and culinary uses of {plant_name} throughout history.",
+                "source": "Herbal Encyclopedia",
+                "type": "information"
+            },
+            {
+                "title": f"Simple {plant_name} Tea Recipe",
+                "link": "https://example.com/tea-recipe",
+                "snippet": f"Learn how to make a refreshing and healthy tea using {plant_name} leaves.",
+                "source": "Natural Recipes",
+                "type": "recipe"
+            },
+            {
+                "title": f"Growing and Caring for {plant_name}",
+                "link": "https://example.com/plant-care",
+                "snippet": f"Essential tips for growing and maintaining healthy {plant_name} plants in your garden.",
+                "source": "Garden Guide",
+                "type": "information"
+            }
+        ]
+        
+        return {
+            "plant_name": plant_name,
+            "recipe_items": fallback_recipes[:limit],
+            "total_results": len(fallback_recipes[:limit]),
+            "data_source": "Curated Plant Information (SerpApi Unavailable)",
+            "last_updated": datetime.now().isoformat()
         }
 
 class ClimateAnalyzer:
@@ -3819,6 +4004,48 @@ def get_real_time_updates():
         
         return jsonify(updates)
     
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Initialize Plant Discovery Service
+plant_discovery_service = PlantDiscoveryService()
+
+@app.route('/api/plant-news')
+def get_plant_news():
+    """Get recent plant science news and discoveries using SerpApi"""
+    try:
+        limit = request.args.get('limit', 5, type=int)
+        news_data = plant_discovery_service.get_plant_news(limit)
+        return jsonify(news_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plant-recipes')
+def get_plant_recipes():
+    """Get recipes and uses for specific plants using SerpApi"""
+    try:
+        plant_name = request.args.get('plant', '')
+        limit = request.args.get('limit', 5, type=int)
+        
+        if not plant_name:
+            return jsonify({'error': 'Plant name parameter is required'}), 400
+        
+        recipe_data = plant_discovery_service.get_plant_recipes_and_uses(plant_name, limit)
+        return jsonify(recipe_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/test-serpapi')
+def test_serpapi():
+    """Test endpoint to verify SerpApi key is loaded correctly"""
+    try:
+        api_key = os.getenv('SERPAPI_KEY', '')
+        return jsonify({
+            'serpapi_key_loaded': bool(api_key),
+            'serpapi_key_length': len(api_key) if api_key else 0,
+            'serpapi_key_preview': api_key[:10] + '...' if api_key else 'NOT_FOUND',
+            'env_file_exists': os.path.exists('.env')
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
