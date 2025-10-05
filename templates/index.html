@@ -148,51 +148,51 @@
                 <p class="text-center text-muted mb-5">BloomWatch uses actual NASA satellite data to teach kids about Earth and space science!</p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-3 mb-4">
+        <div class="row g-4">
+            <div class="col-lg-6 col-md-6 mb-4">
                 <div class="card h-100 shadow border-0 nasa-feature-card">
-                    <div class="card-body text-center">
+                    <div class="card-body text-center p-4">
                         <div class="nasa-feature-icon mb-3">🛰️</div>
                         <h5 class="card-title">Real Satellite Imagery</h5>
                         <p class="card-text">See Earth from space using NASA GIBS satellite images! Click anywhere on the map to get real satellite data.</p>
-                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-sm">Try It Now!</a>
+                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-lg w-100">Try It Now!</a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+            <div class="col-lg-6 col-md-6 mb-4">
                 <div class="card h-100 shadow border-0 nasa-feature-card">
-                    <div class="card-body text-center">
+                    <div class="card-body text-center p-4">
                         <div class="nasa-feature-icon mb-3">🌌</div>
                         <h5 class="card-title">Daily Space Pictures</h5>
                         <p class="card-text">Get fresh space images every day from NASA's Astronomy Picture of the Day (APOD)!</p>
-                        <button class="btn btn-primary btn-sm" onclick="loadNASAPicture()">See Today's Picture!</button>
+                        <button class="btn btn-primary btn-lg w-100" onclick="loadNASAPicture()">See Today's Picture!</button>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+            <div class="col-lg-6 col-md-6 mb-4">
                 <div class="card h-100 shadow border-0 nasa-feature-card">
-                    <div class="card-body text-center">
+                    <div class="card-body text-center p-4">
                         <div class="nasa-feature-icon mb-3">🚀</div>
                         <h5 class="card-title">Space Facts</h5>
                         <p class="card-text">Learn amazing facts about space, satellites, and Earth science from real NASA data!</p>
-                        <button class="btn btn-primary btn-sm" onclick="loadNASASpaceFacts()">Get Space Facts!</button>
+                        <button class="btn btn-primary btn-lg w-100" onclick="loadNASASpaceFacts()">Get Space Facts!</button>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+            <div class="col-lg-6 col-md-6 mb-4">
                 <div class="card h-100 shadow border-0 nasa-feature-card">
-                    <div class="card-body text-center">
+                    <div class="card-body text-center p-4">
                         <div class="nasa-feature-icon mb-3">🌱</div>
                         <h5 class="card-title">Plant Health Data</h5>
                         <p class="card-text">See how healthy plants are using real NASA satellite vegetation data from space!</p>
-                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-sm">Explore Plants!</a>
+                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-lg w-100">Explore Plants!</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row mt-4">
+        <div class="row mt-5">
             <div class="col-12">
-                <div class="alert alert-info text-center">
+                <div class="alert alert-info text-center p-4">
                     <h6 class="mb-2">🛰️ Powered by NASA Space Data!</h6>
                     <p class="mb-0">BloomWatch integrates with multiple NASA APIs including GIBS, APOD, and POWER to provide real space data for educational purposes.</p>
                 </div>
@@ -854,9 +854,18 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body text-center">
-                                    <img src="${data.image_url}" class="img-fluid mb-3" alt="NASA APOD">
-                                    <p class="text-muted">${data.explanation}</p>
-                                    <p><strong>Data Source:</strong> ${data.nasa_metadata.data_source}</p>
+                                    ${data.image_url ? `<img src="${data.image_url}" class="img-fluid mb-3" alt="NASA APOD" style="max-height: 400px; width: auto; border-radius: 10px;">` : ''}
+                                    <h6 class="text-primary">${data.title}</h6>
+                                    <p class="text-muted small">${data.explanation}</p>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-md-6">
+                                            <small><strong>Date:</strong> ${data.date}</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small><strong>Source:</strong> ${data.nasa_metadata.data_source}</small>
+                                        </div>
+                                    </div>
+                                    ${data.copyright ? `<p class="text-muted small mt-2"><em>Copyright: ${data.copyright}</em></p>` : ''}
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

@@ -31,6 +31,7 @@ class ExploreApp {
         this.loadFunFacts();
         this.startFactRotation();
         this.loadAchievements();
+        this.initializeChart();
     }
     
     initializeMap() {
@@ -155,6 +156,9 @@ class ExploreApp {
             
             // Show NASA data prominently
             this.showNASAData(data, lat, lng);
+            
+            // Update the chart with real NASA data
+            this.updateChart(data);
             
         } catch (error) {
             console.error('Error fetching NASA data:', error);
@@ -387,23 +391,45 @@ class ExploreApp {
             const latestData = nasaData.data[nasaData.data.length - 1];
             const healthScore = Math.round((latestData.ndvi || 0.5) * 100);
             
-            // Update the progress bar
-            const progressBar = document.querySelector('#plantHealthProgress .progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${healthScore}%`;
-                progressBar.textContent = `${healthScore}%`;
+            // Update the intensity bar
+            const intensityBar = document.getElementById('intensityBar');
+            const currentIntensity = document.getElementById('currentIntensity');
+            if (intensityBar && currentIntensity) {
+                intensityBar.style.width = `${healthScore}%`;
+                currentIntensity.textContent = `${healthScore}%`;
                 
                 // Update color based on health
                 if (healthScore >= 70) {
-                    progressBar.className = 'progress-bar bg-success';
+                    intensityBar.className = 'progress-bar bg-success';
                 } else if (healthScore >= 50) {
-                    progressBar.className = 'progress-bar bg-warning';
+                    intensityBar.className = 'progress-bar bg-warning';
                 } else {
-                    progressBar.className = 'progress-bar bg-danger';
+                    intensityBar.className = 'progress-bar bg-danger';
                 }
             }
             
-            // Update other metrics if they exist
+            // Update peak date
+            const peakDate = document.getElementById('peakDate');
+            if (peakDate) {
+                const peakData = nasaData.data.reduce((max, item) => item.ndvi > max.ndvi ? item : max);
+                peakDate.textContent = peakData.date || 'Today';
+            }
+            
+            // Update trend
+            const trend = document.getElementById('trend');
+            if (trend && nasaData.data.length > 1) {
+                const first = nasaData.data[0].ndvi;
+                const last = nasaData.data[nasaData.data.length - 1].ndvi;
+                if (last > first) {
+                    trend.textContent = '📈 Growing!';
+                } else if (last < first) {
+                    trend.textContent = '📉 Declining';
+                } else {
+                    trend.textContent = '➡️ Stable';
+                }
+            }
+            
+            // Update peak season
             const peakSeason = document.getElementById('peakSeason');
             if (peakSeason) {
                 peakSeason.textContent = nasaData.satellite_imagery ? 
@@ -418,12 +444,23 @@ class ExploreApp {
             );
         } else {
             // Fallback to default values
-            const progressBar = document.querySelector('#plantHealthProgress .progress-bar');
-            if (progressBar) {
-                progressBar.style.width = '75%';
-                progressBar.textContent = '75%';
-                progressBar.className = 'progress-bar bg-success';
+            const intensityBar = document.getElementById('intensityBar');
+            const currentIntensity = document.getElementById('currentIntensity');
+            if (intensityBar && currentIntensity) {
+                intensityBar.style.width = '75%';
+                currentIntensity.textContent = '75%';
+                intensityBar.className = 'progress-bar bg-success';
             }
+            
+            // Set default values for other metrics
+            const peakDate = document.getElementById('peakDate');
+            if (peakDate) peakDate.textContent = 'Today';
+            
+            const trend = document.getElementById('trend');
+            if (trend) trend.textContent = '📈 Growing!';
+            
+            const peakSeason = document.getElementById('peakSeason');
+            if (peakSeason) peakSeason.textContent = '🌱 Spring';
         }
     }
     
@@ -461,6 +498,76 @@ class ExploreApp {
             
             // Scroll to the NASA data section
             nasaCard.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    initializeChart() {
+        // Initialize the time series chart with sample data
+        const ctx = document.getElementById('timeSeriesChart');
+        if (ctx) {
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Plant Health (NDVI)',
+                        data: [0.3, 0.4, 0.6, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '🛰️ NASA Satellite Plant Health Data',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'NDVI (Plant Health Index)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            this.chart = chart;
+        }
+    }
+    
+    updateChart(nasaData) {
+        // Update the chart with real NASA data
+        if (this.chart && nasaData && nasaData.data && nasaData.data.length > 0) {
+            const dates = nasaData.data.map(d => d.date || 'Unknown');
+            const ndviValues = nasaData.data.map(d => d.ndvi || 0);
+            
+            this.chart.data.labels = dates;
+            this.chart.data.datasets[0].data = ndviValues;
+            this.chart.update();
         }
     }
 }
