@@ -2654,8 +2654,8 @@ def get_nasa_space_facts():
 def get_nasa_eonet():
     """Get NASA EONET (Earth Observatory Natural Event Tracker) data"""
     try:
-        # Get recent natural events from NASA EONET
-        url = f"https://eonet.gsfc.nasa.gov/api/v3/events?days=30&limit=10"
+        # Get recent natural events from NASA EONET v2.1 (as per documentation)
+        url = f"https://eonet.gsfc.nasa.gov/api/v2.1/events?days=30&limit=10&status=open"
         response = requests.get(url, timeout=10)
         
         if response.status_code == 200:
@@ -2667,15 +2667,26 @@ def get_nasa_eonet():
             for event in events[:5]:  # Limit to 5 events
                 title = event.get('title', '')
                 categories = event.get('categories', [])
+                geometries = event.get('geometries', [])
                 
                 # Check if it's related to plants/nature and kid-friendly
-                if any(cat.get('title', '').lower() in ['wildfires', 'dust', 'storms', 'volcanoes'] for cat in categories):
+                # Category IDs from EONET: 8=Wildfires, 10=Volcanoes, 12=Dust, 13=Floods, 14=Landslides
+                kid_friendly_categories = ['wildfires', 'volcanoes', 'dust', 'floods', 'landslides', 'storms']
+                if any(cat.get('title', '').lower() in kid_friendly_categories for cat in categories):
+                    # Get coordinates from geometries if available
+                    coordinates = [0, 0]
+                    if geometries and len(geometries) > 0:
+                        geom = geometries[0].get('coordinates', [])
+                        if geom and len(geom) >= 2:
+                            # For Point geometry: [lon, lat]
+                            coordinates = [geom[0], geom[1]] if len(geom) == 2 else [geom[0], geom[1]]
+                    
                     kid_friendly_events.append({
                         'title': title,
-                        'date': event.get('date', ''),
-                        'coordinates': event.get('geometry', [{}])[0].get('coordinates', [0, 0]) if event.get('geometry') else [0, 0],
+                        'date': geometries[0].get('date', '') if geometries else '',
+                        'coordinates': coordinates,
                         'category': categories[0].get('title', 'Natural Event') if categories else 'Natural Event',
-                        'description': f"NASA satellite detected {title.lower()} affecting plant life"
+                        'description': f"NASA satellite detected {title.lower()} affecting Earth's environment"
                     })
             
             return jsonify({
