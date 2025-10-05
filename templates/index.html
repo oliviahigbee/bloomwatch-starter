@@ -389,6 +389,56 @@
                 </div>
             </div> -->
         </div>
+                
+        <!-- Plant Discovery Section -->
+        <div class="row mb-4">
+            <!-- Plant News & Discoveries -->
+            <div class="col-lg-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-success text-white text-center">
+                        <h5 class="mb-0">🌱 Plant News & Discoveries</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center mb-3">Stay updated with the latest plant science news!</p>
+                        <div id="plantNewsList">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading plant news...
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-success btn-sm" onclick="loadPlantNews()">
+                                🔄 Refresh News
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Plant Recipes & Uses -->
+            <div class="col-lg-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-warning text-dark text-center">
+                        <h5 class="mb-0">🍃 Plant Recipes & Uses</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center mb-3">Discover recipes and uses for plants!</p>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="plantSearchInput" placeholder="Enter plant name (e.g., lavender, mint, rosemary)">
+                                <button class="btn btn-warning" onclick="searchPlantRecipes()">
+                                    🔍 Search
+                                </button>
+                            </div>
+                        </div>
+                        <div id="plantRecipesList">
+                            <div class="alert alert-warning text-center">
+                                <i class="fas fa-leaf me-2"></i>Search for a plant to discover its uses!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Citizen Science & NASA Attribution Row -->
         <div class="row mb-4">
@@ -443,57 +493,7 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Plant Discovery Section -->
-        <div class="row mb-4">
-            <!-- Plant News & Discoveries -->
-            <div class="col-lg-6">
-                <div class="card shadow h-100">
-                    <div class="card-header bg-success text-white text-center">
-                        <h5 class="mb-0">🌱 Plant News & Discoveries</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-center mb-3">Stay updated with the latest plant science news!</p>
-                        <div id="plantNewsList">
-                            <div class="alert alert-info text-center">
-                                <i class="fas fa-spinner fa-spin me-2"></i>Loading plant news...
-                            </div>
-                        </div>
-                        <div class="text-center mt-3">
-                            <button class="btn btn-success btn-sm" onclick="loadPlantNews()">
-                                🔄 Refresh News
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Plant Recipes & Uses -->
-            <div class="col-lg-6">
-                <div class="card shadow h-100">
-                    <div class="card-header bg-warning text-dark text-center">
-                        <h5 class="mb-0">🍃 Plant Recipes & Uses</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-center mb-3">Discover recipes and uses for plants!</p>
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="plantSearchInput" placeholder="Enter plant name (e.g., lavender, mint, rosemary)">
-                                <button class="btn btn-warning" onclick="searchPlantRecipes()">
-                                    🔍 Search
-                                </button>
-                            </div>
-                        </div>
-                        <div id="plantRecipesList">
-                            <div class="alert alert-warning text-center">
-                                <i class="fas fa-leaf me-2"></i>Search for a plant to discover its uses!
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+
         <!-- Hidden AI & Advanced Analytics (for future use) -->
         <div class="row mb-4" style="display: none;">
             <div class="col-lg-8">
