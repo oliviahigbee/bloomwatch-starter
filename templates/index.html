@@ -1207,7 +1207,7 @@
     </script>
 
     <!-- Loads Cool Plant Facts -->
-    <script>
+    <!-- <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const insightsList = document.getElementById("insightsList");
 
@@ -1226,7 +1226,7 @@
                 `;
             }
         });
-    </script>
+    </script> -->
 
     <!-- Plant Discovery Functions -->
     <script>
@@ -1349,7 +1349,7 @@
     </script>
 
     <!-- Loads Cool Plant Facts -->
-    <script>
+    <!-- <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const insightsList = document.getElementById("insightsList");
 
@@ -1368,7 +1368,59 @@
                 `;
             }
         });
+    </script> -->
+
+    <!-- Load Facts and Helpful Tips -->
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const insightsList = document.getElementById("insightsList");
+        const recommendationsList = document.getElementById("recommendationsList");
+
+        // Helper to fetch data from an endpoint
+        async function fetchData(url) {
+            try {
+                const resp = await fetch(url);
+                const data = await resp.json();
+                return data;
+            } catch (err) {
+                console.error("Error fetching", url, err);
+                return null;
+            }
+        }
+
+        // Update a UL element with fact/tip
+        function updateList(ul, titleKey, emojiKey, textKey) {
+            return async function () {
+                const endpoint = ul.id === "insightsList" ? "/api/nasa-space-facts" : "/api/help-plants";
+                const data = await fetchData(endpoint);
+                if (!data) {
+                    ul.innerHTML = `<li class="text-danger">Failed to load data.</li>`;
+                    return;
+                }
+
+                const item = ul.id === "insightsList" ? data.space_fact : data.plant_helper;
+                const title = ul.id === "insightsList" ? item.fact : item.action;
+                const emoji = item.emoji;
+                const text = ul.id === "insightsList" ? item.explanation : item.explanation;
+
+                ul.innerHTML = `
+                    <li><strong>${emoji} ${title}</strong></li>
+                    <li class="text-muted">${text}</li>
+                `;
+            };
+        }
+
+        // Initial load
+        const updateFacts = updateList(insightsList);
+        const updateTips = updateList(recommendationsList);
+
+        updateFacts();
+        updateTips();
+
+        // Rotate every 5 seconds
+        setInterval(updateFacts, 5000);
+        setInterval(updateTips, 5000);
+    });
     </script>
->>>>>>> 2028396b (Added How to Help Plants)
 </body>
 </html>

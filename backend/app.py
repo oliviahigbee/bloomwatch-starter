@@ -23,6 +23,7 @@ import io
 from werkzeug.utils import secure_filename
 from PIL import Image
 from serpapi import GoogleSearch
+import random
 warnings.filterwarnings('ignore')
 
 # Load environment variables
@@ -2849,93 +2850,26 @@ def test_env():
 def get_nasa_space_facts():
     """Get fun NASA space facts for kids"""
     space_facts = [
-        {
-            "fact": "Did you know? NASA satellites can see plants growing from space!",
-            "explanation": "Using special cameras that detect green light, NASA can monitor vegetation health all over Earth.",
-            "related_to_blooms": True,
-            "emoji": "🌱"
-        },
-        {
-            "fact": "The International Space Station travels at 17,500 miles per hour!",
-            "explanation": "That's so fast it orbits Earth 16 times every day!",
-            "related_to_blooms": False,
-            "emoji": "🚀"
-        },
-        {
-            "fact": "NASA has been studying Earth from space for over 50 years!",
-            "explanation": "This helps scientists understand how our planet changes over time.",
-            "related_to_blooms": True,
-            "emoji": "🌍"
-        },
-        {
-            "fact": "Satellites can detect different types of light invisible to our eyes!",
-            "explanation": "This helps scientists see things like plant health, water quality, and even pollution!",
-            "related_to_blooms": True,
-            "emoji": "👁️"
-        }
+        {"fact": "NASA satellites can see plants growing from space!", "explanation": "Using special cameras that detect green light, NASA can monitor vegetation health all over Earth.", "emoji": "🌱"},
+        {"fact": "The International Space Station travels at 17,500 miles per hour!", "explanation": "That's so fast it orbits Earth 16 times every day!", "emoji": "🚀"},
+        {"fact": "NASA has been studying Earth from space for over 50 years!", "explanation": "This helps scientists understand how our planet changes over time.", "emoji": "🌍"},
+        {"fact": "Satellites can detect different types of light invisible to our eyes!", "explanation": "This helps scientists see things like plant health, water quality, and even pollution!", "emoji": "👁️"}
     ]
-    
-    import random
     selected_fact = random.choice(space_facts)
-    
-    return jsonify({
-        'data_availability': 'real_nasa_data',
-        'space_fact': selected_fact,
-        'nasa_metadata': {
-            'data_source': 'NASA Educational Content',
-            'kid_friendly': True,
-            'educational_value': 'High - Space science fun facts'
-        }
-    })
+    return jsonify({'space_fact': selected_fact})
 
 # How you can help plants!
 @app.route('/api/help-plants')
 def get_help_plants():
     help_plants = [
-        {
-            "action": "Plant trees and flowers",
-            "explanation": "Trees clean the air and give animals homes.",
-            "related_to_blooms": True,
-            "emoji": "🌳"
-        },
-        {
-            "action": "Water plants gently",
-            "explanation": "Use just enough so roots get a drink but don’t drown.",
-            "related_to_blooms": False,
-            "emoji": "🚀"
-        },
-        {
-            "action": "Reuse water",
-            "explanation": "Collect rainwater or leftover drinking water for plants.",
-            "related_to_blooms": False,
-            "emoji": "🌍"
-        },
-        {
-            "action": "Grow native plants",
-            "explanation": "They need less water and attract bees and butterflies.",
-            "related_to_blooms": True,
-            "emoji": "👁️"
-        },
-        {
-            "action": "Build a pollinator garden",
-            "explanation": "Plant flowers that bees and butterflies love.",
-            "related_to_blooms": True,
-            "emoji": "👁️"
-        }
+        {"action": "Plant trees and flowers", "explanation": "Trees clean the air and give animals homes.", "emoji": "🌳"},
+        {"action": "Water plants gently", "explanation": "Use just enough so roots get a drink but don’t drown.", "emoji": "💧"},
+        {"action": "Reuse water", "explanation": "Collect rainwater or leftover drinking water for plants.", "emoji": "🌍"},
+        {"action": "Grow native plants", "explanation": "They need less water and attract bees and butterflies.", "emoji": "🌸"},
+        {"action": "Build a pollinator garden", "explanation": "Plant flowers that bees and butterflies love.", "emoji": "🐝"}
     ]
-    
-    import random
     selected_fact = random.choice(help_plants)
-    
-    return jsonify({
-        'data_availability': 'real_nasa_data',
-        'plant_helper': selected_fact,
-        'nasa_metadata': {
-            'data_source': 'NASA Educational Content',
-            'kid_friendly': True,
-            'educational_value': 'High - Space science fun facts'
-        }
-    })
+    return jsonify({'plant_helper': selected_fact})
 
 @app.route('/api/nasa-eonet')
 def get_nasa_eonet():

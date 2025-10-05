@@ -268,7 +268,7 @@
             <!-- Photos will be loaded here -->
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card shadow">
-                    <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <img src="{{ url_for('static', filename='images/cherry_blossom_sample.jpg') }}" class="card-img-top" alt="Sample plant photo">
                     <div class="card-body">
                         <h6 class="card-title">🌸 Cherry Blossom</h6>
                         <p class="card-text">Beautiful pink flowers in spring!</p>
@@ -282,9 +282,9 @@
             
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card shadow">
-                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <img src="{{ url_for('static', filename='images/daffodil_sample.jpg') }}" class="card-img-top" alt="Sample plant photo">
                     <div class="card-body">
-                        <h6 class="card-title">🌻 Sunflower</h6>
+                        <h6 class="card-title">🌻 Daffodil</h6>
                         <p class="card-text">Tall and bright yellow!</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">by Plant Lover</small>
@@ -296,7 +296,7 @@
             
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card shadow">
-                    <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop" class="card-img-top" alt="Sample plant photo">
+                    <img src="{{ url_for('static', filename='images/rose.jpg') }}" class="card-img-top" alt="Sample plant photo">
                     <div class="card-body">
                         <h6 class="card-title">🌹 Rose</h6>
                         <p class="card-text">Red and very pretty!</p>
