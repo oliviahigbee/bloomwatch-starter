@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Kids Quiz Corner - BloomWatch Kids</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Fun educational quizzes for kids to learn about plants, nature, and conservation!">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="BloomWatch Quiz">
+    <meta name="msapplication-TileColor" content="#28a745">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#28a745">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/">
+                    <i class="fas fa-home me-1"></i>🏠 Home
+                </a>
+                <a class="nav-link text-white active" href="/quiz">
+                    <i class="fas fa-brain me-1"></i>🧠 Quiz Corner
+                </a>
+                <span class="navbar-text ms-3">
+                    <i class="fas fa-rocket me-1"></i>Powered by NASA Space Data! 🚀
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        🧠 Kids Quiz Corner! 🧠
+                    </h1>
+                    <p class="lead text-white mb-4">
+                        Test your knowledge about plants, nature, and our amazing Earth! 
+                        Learn fun facts while playing interactive quizzes! 🌍✨
+                    </p>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-light btn-lg" onclick="startQuiz('plants')">
+                            <i class="fas fa-seedling me-2"></i>🌱 Plant Quiz
+                        </button>
+                        <button class="btn btn-outline-light btn-lg" onclick="startQuiz('nature')">
+                            <i class="fas fa-leaf me-2"></i>🌿 Nature Quiz
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-stats">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🧠</h3>
+                                    <p class="text-white-50">Quizzes</p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <h3 class="text-white">⭐</h3>
+                                    <p class="text-white-50">Stars</p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🎯</h3>
+                                    <p class="text-white-50">Score</p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🏆</h3>
+                                    <p class="text-white-50">Badges</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Categories Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-gamepad me-2"></i>🎮 Choose Your Adventure!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('plants')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+                                        <h5 class="card-title">🌱 Plant Power Quiz</h5>
+                                        <p class="card-text">Learn about different types of plants, how they grow, and why they're important!</p>
+                                        <div class="badge bg-success">5 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('nature')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-leaf fa-3x text-success mb-3"></i>
+                                        <h5 class="card-title">🌿 Nature Explorer</h5>
+                                        <p class="card-text">Discover amazing facts about forests, flowers, and the natural world!</p>
+                                        <div class="badge bg-info">5 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('space')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+                                        <h5 class="card-title">🚀 Space & Earth</h5>
+                                        <p class="card-text">Learn how NASA satellites help us study plants from space!</p>
+                                        <div class="badge bg-primary">5 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('seasons')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-snowflake fa-3x text-info mb-3"></i>
+                                        <h5 class="card-title">❄️ Seasons & Weather</h5>
+                                        <p class="card-text">Find out how seasons affect plants and what weather they like!</p>
+                                        <div class="badge bg-warning">5 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('conservation')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-recycle fa-3x text-success mb-3"></i>
+                                        <h5 class="card-title">♻️ Save the Planet</h5>
+                                        <p class="card-text">Learn how to help protect plants and our environment!</p>
+                                        <div class="badge bg-success">5 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card quiz-category-card h-100" onclick="startQuiz('mixed')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                                        <h5 class="card-title">⭐ Mixed Challenge</h5>
+                                        <p class="card-text">Test everything you've learned with our ultimate quiz!</p>
+                                        <div class="badge bg-danger">10 Questions</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Container (Hidden by default) -->
+    <div class="container my-5" id="quizContainer" style="display: none;">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-question-circle me-2"></i><span id="quizTitle">Quiz Time!</span>
+                        </h5>
+                        <div>
+                            <span class="badge bg-primary me-2">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
+                            <span class="badge bg-success">Score: <span id="currentScore">0</span></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-4">
+                            <div class="progress-bar bg-success" id="quizProgress" style="width: 0%"></div>
+                        </div>
+                        
+                        <div id="questionContainer">
+                            <!-- Quiz questions will be loaded here -->
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button class="btn btn-primary btn-lg" id="nextQuestionBtn" onclick="nextQuestion()" style="display: none;">
+                                <i class="fas fa-arrow-right me-2"></i>Next Question
+                            </button>
+                            <button class="btn btn-success btn-lg" id="finishQuizBtn" onclick="finishQuiz()" style="display: none;">
+                                <i class="fas fa-trophy me-2"></i>Finish Quiz!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Container (Hidden by default) -->
+    <div class="container my-5" id="resultsContainer" style="display: none;">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>🎉 Quiz Results! 🎉
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-medal fa-5x text-warning mb-3"></i>
+                            <h3 id="resultTitle">Great Job!</h3>
+                            <p class="lead" id="resultMessage">You did amazing on this quiz!</p>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="metric-item">
+                                    <h4 class="text-success" id="finalScore">0/5</h4>
+                                    <p>Final Score</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-item">
+                                    <h4 class="text-primary" id="percentage">0%</h4>
+                                    <p>Percentage</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-item">
+                                    <h4 class="text-warning" id="starsEarned">⭐⭐⭐</h4>
+                                    <p>Stars Earned</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button class="btn btn-primary btn-lg" onclick="startNewQuiz()">
+                                <i class="fas fa-redo me-2"></i>Try Another Quiz
+                            </button>
+                            <button class="btn btn-success btn-lg" onclick="goHome()">
+                                <i class="fas fa-home me-2"></i>Back to Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fun Facts Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>💡 Fun Facts Corner
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>🌟 Amazing Plant Facts!</h6>
+                                <ul id="funFactsList" class="list-unstyled">
+                                    <li><i class="fas fa-seedling me-2 text-success"></i>Plants make their own food using sunlight!</li>
+                                    <li><i class="fas fa-leaf me-2 text-success"></i>Some plants can live for thousands of years!</li>
+                                    <li><i class="fas fa-flower me-2 text-success"></i>Flowers use bright colors to attract bees and butterflies!</li>
+                                    <li><i class="fas fa-tree me-2 text-success"></i>Trees help clean the air we breathe!</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>🚀 NASA Space Facts!</h6>
+                                <ul id="nasaFactsList" class="list-unstyled">
+                                    <li><i class="fas fa-satellite me-2 text-primary"></i>NASA satellites can see plants from space!</li>
+                                    <li><i class="fas fa-globe me-2 text-primary"></i>We can track how green the Earth is from space!</li>
+                                    <li><i class="fas fa-chart-line me-2 text-primary"></i>Scientists use space data to study climate change!</li>
+                                    <li><i class="fas fa-rocket me-2 text-primary"></i>Space technology helps us protect our planet!</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>🧠 BloomWatch Kids Quiz Corner</h6>
+                    <p class="mb-0">Learning about plants and nature through fun quizzes! 🌱</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-rocket me-1"></i>
+                        Powered by NASA Space Data! 🌟
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.7"></script>
+    
+    <!-- Quiz JavaScript -->
+    <script>
+        // Quiz data and state
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizData = {
+            plants: {
+                title: "🌱 Plant Power Quiz",
+                questions: [
+                    {
+                        question: "What do plants need to make their own food?",
+                        options: ["Water", "Sunlight", "Soil", "All of the above"],
+                        correct: 3,
+                        explanation: "Plants need sunlight, water, and nutrients from soil to make their own food through photosynthesis!"
+                    },
+                    {
+                        question: "What part of the plant makes food?",
+                        options: ["Roots", "Stem", "Leaves", "Flowers"],
+                        correct: 2,
+                        explanation: "Leaves contain chlorophyll which helps plants make food using sunlight!"
+                    },
+                    {
+                        question: "What gas do plants give off that we need to breathe?",
+                        options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Water vapor"],
+                        correct: 1,
+                        explanation: "Plants give off oxygen during photosynthesis, which is what we breathe!"
+                    },
+                    {
+                        question: "Which of these is NOT a plant?",
+                        options: ["Tree", "Flower", "Mushroom", "Grass"],
+                        correct: 2,
+                        explanation: "Mushrooms are fungi, not plants! They don't make their own food like plants do."
+                    },
+                    {
+                        question: "What do we call the process where plants make food?",
+                        options: ["Respiration", "Photosynthesis", "Digestion", "Reproduction"],
+                        correct: 1,
+                        explanation: "Photosynthesis is the amazing process where plants use sunlight to make food!"
+                    }
+                ]
+            },
+            nature: {
+                title: "🌿 Nature Explorer",
+                questions: [
+                    {
+                        question: "What season do most flowers bloom?",
+                        options: ["Winter", "Spring", "Summer", "Fall"],
+                        correct: 1,
+                        explanation: "Spring is when most flowers bloom because the weather gets warmer and there's more sunlight!"
+                    },
+                    {
+                        question: "What do bees collect from flowers?",
+                        options: ["Water", "Nectar", "Seeds", "Leaves"],
+                        correct: 1,
+                        explanation: "Bees collect nectar from flowers to make honey!"
+                    },
+                    {
+                        question: "What helps plants grow taller?",
+                        options: ["Roots", "Stem", "Leaves", "Flowers"],
+                        correct: 1,
+                        explanation: "The stem helps plants grow taller and supports the leaves and flowers!"
+                    },
+                    {
+                        question: "What color are most leaves?",
+                        options: ["Red", "Blue", "Green", "Yellow"],
+                        correct: 2,
+                        explanation: "Most leaves are green because they contain chlorophyll!"
+                    },
+                    {
+                        question: "What do plants need from the soil?",
+                        options: ["Water", "Nutrients", "Support", "All of the above"],
+                        correct: 3,
+                        explanation: "Plants get water, nutrients, and support from the soil!"
+                    }
+                ]
+            },
+            space: {
+                title: "🚀 Space & Earth",
+                questions: [
+                    {
+                        question: "What can NASA satellites see from space?",
+                        options: ["Buildings", "Plants", "Cars", "All of the above"],
+                        correct: 3,
+                        explanation: "NASA satellites can see many things from space, including how green our planet is!"
+                    },
+                    {
+                        question: "What color does healthy vegetation look like from space?",
+                        options: ["Red", "Blue", "Green", "Yellow"],
+                        correct: 2,
+                        explanation: "Healthy vegetation appears green from space because of chlorophyll!"
+                    },
+                    {
+                        question: "What do scientists study using space data?",
+                        options: ["Weather", "Climate change", "Plant growth", "All of the above"],
+                        correct: 3,
+                        explanation: "Scientists use space data to study weather, climate change, and how plants grow!"
+                    },
+                    {
+                        question: "How often do satellites take pictures of Earth?",
+                        options: ["Once a year", "Once a month", "Every few days", "Every few hours"],
+                        correct: 2,
+                        explanation: "Many satellites take pictures of Earth every few days to track changes!"
+                    },
+                    {
+                        question: "What helps NASA satellites see plants better?",
+                        options: ["Telescopes", "Special cameras", "Radar", "All of the above"],
+                        correct: 3,
+                        explanation: "NASA uses special cameras, radar, and other tools to study Earth from space!"
+                    }
+                ]
+            },
+            seasons: {
+                title: "❄️ Seasons & Weather",
+                questions: [
+                    {
+                        question: "In which season do leaves change color?",
+                        options: ["Spring", "Summer", "Fall", "Winter"],
+                        correct: 2,
+                        explanation: "Leaves change beautiful colors in the fall before they fall off!"
+                    },
+                    {
+                        question: "What happens to many plants in winter?",
+                        options: ["They grow faster", "They go to sleep", "They change color", "They make more flowers"],
+                        correct: 1,
+                        explanation: "Many plants go dormant (sleep) in winter to save energy!"
+                    },
+                    {
+                        question: "What weather do most plants like?",
+                        options: ["Very hot", "Very cold", "Just right", "Very dry"],
+                        correct: 2,
+                        explanation: "Most plants like moderate weather - not too hot, not too cold!"
+                    },
+                    {
+                        question: "What do plants need from rain?",
+                        options: ["Water", "Nutrients", "Cooling", "All of the above"],
+                        correct: 3,
+                        explanation: "Rain provides water, nutrients, and helps cool plants down!"
+                    },
+                    {
+                        question: "When do most plants grow the most?",
+                        options: ["Winter", "Spring and Summer", "Fall", "All year"],
+                        correct: 1,
+                        explanation: "Most plants grow the most in spring and summer when it's warm and sunny!"
+                    }
+                ]
+            },
+            conservation: {
+                title: "♻️ Save the Planet",
+                questions: [
+                    {
+                        question: "How can you help plants grow?",
+                        options: ["Water them", "Plant seeds", "Protect them", "All of the above"],
+                        correct: 3,
+                        explanation: "You can help plants by watering them, planting seeds, and protecting them!"
+                    },
+                    {
+                        question: "What should you do with old plant parts?",
+                        options: ["Throw them away", "Compost them", "Burn them", "Leave them alone"],
+                        correct: 1,
+                        explanation: "Composting old plant parts helps make new soil for more plants!"
+                    },
+                    {
+                        question: "Why are trees important?",
+                        options: ["They clean the air", "They provide shade", "They make oxygen", "All of the above"],
+                        correct: 3,
+                        explanation: "Trees are super important - they clean air, provide shade, and make oxygen!"
+                    },
+                    {
+                        question: "What can you do to help the environment?",
+                        options: ["Recycle", "Save water", "Plant flowers", "All of the above"],
+                        correct: 3,
+                        explanation: "Recycling, saving water, and planting flowers all help our environment!"
+                    },
+                    {
+                        question: "Why should we protect plants?",
+                        options: ["They're pretty", "They help us breathe", "They provide food", "All of the above"],
+                        correct: 3,
+                        explanation: "Plants are beautiful, help us breathe, and provide food - that's why we should protect them!"
+                    }
+                ]
+            },
+            mixed: {
+                title: "⭐ Mixed Challenge",
+                questions: [
+                    {
+                        question: "What is the largest type of plant?",
+                        options: ["Flower", "Tree", "Grass", "Bush"],
+                        correct: 1,
+                        explanation: "Trees are the largest type of plant - some can grow hundreds of feet tall!"
+                    },
+                    {
+                        question: "How do plants help animals?",
+                        options: ["Provide food", "Provide shelter", "Make oxygen", "All of the above"],
+                        correct: 3,
+                        explanation: "Plants help animals by providing food, shelter, and oxygen to breathe!"
+                    },
+                    {
+                        question: "What do NASA satellites help scientists study?",
+                        options: ["Plant health", "Climate change", "Weather patterns", "All of the above"],
+                        correct: 3,
+                        explanation: "NASA satellites help scientists study plant health, climate change, and weather!"
+                    },
+                    {
+                        question: "What season is best for planting seeds?",
+                        options: ["Winter", "Spring", "Summer", "Fall"],
+                        correct: 1,
+                        explanation: "Spring is the best time to plant seeds because the soil is warm and moist!"
+                    },
+                    {
+                        question: "What gas do plants take in from the air?",
+                        options: ["Oxygen", "Carbon dioxide", "Nitrogen", "Water vapor"],
+                        correct: 1,
+                        explanation: "Plants take in carbon dioxide from the air to make their food!"
+                    },
+                    {
+                        question: "How do flowers help plants reproduce?",
+                        options: ["They look pretty", "They attract pollinators", "They make seeds", "Both B and C"],
+                        correct: 3,
+                        explanation: "Flowers attract pollinators like bees, which help plants make seeds!"
+                    },
+                    {
+                        question: "What happens to plants without sunlight?",
+                        options: ["They grow faster", "They turn yellow", "They make more flowers", "Nothing"],
+                        correct: 1,
+                        explanation: "Plants without sunlight turn yellow because they can't make chlorophyll!"
+                    },
+                    {
+                        question: "What do roots do for plants?",
+                        options: ["Make food", "Absorb water", "Attract bees", "Change color"],
+                        correct: 1,
+                        explanation: "Roots absorb water and nutrients from the soil to help plants grow!"
+                    },
+                    {
+                        question: "Why are rainforests important?",
+                        options: ["They're home to many animals", "They help regulate climate", "They produce oxygen", "All of the above"],
+                        correct: 3,
+                        explanation: "Rainforests are super important - they're home to animals, help climate, and make oxygen!"
+                    },
+                    {
+                        question: "What can you do to help plants in your community?",
+                        options: ["Plant a garden", "Water plants", "Don't litter", "All of the above"],
+                        correct: 3,
+                        explanation: "You can help plants by gardening, watering them, and keeping the environment clean!"
+                    }
+                ]
+            }
+        };
+
+        function startQuiz(category) {
+            currentQuiz = quizData[category];
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // Hide other sections and show quiz
+            document.querySelector('.container:nth-of-type(2)').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            
+            // Update quiz info
+            document.getElementById('quizTitle').textContent = currentQuiz.title;
+            document.getElementById('totalQuestions').textContent = currentQuiz.questions.length;
+            document.getElementById('currentQuestion').textContent = 1;
+            document.getElementById('currentScore').textContent = 0;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const container = document.getElementById('questionContainer');
+            
+            // Update progress
+            const progress = ((currentQuestionIndex + 1) / currentQuiz.questions.length) * 100;
+            document.getElementById('quizProgress').style.width = progress + '%';
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            
+            // Create question HTML
+            container.innerHTML = `
+                <div class="question-card">
+                    <h4 class="mb-4">${question.question}</h4>
+                    <div class="options-container">
+                        ${question.options.map((option, index) => `
+                            <div class="option-item" onclick="selectAnswer(${index})">
+                                <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                                <div class="option-text">${option}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="explanation" class="mt-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Explanation:</strong> ${question.explanation}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Show/hide buttons
+            document.getElementById('nextQuestionBtn').style.display = 'none';
+            document.getElementById('finishQuizBtn').style.display = 'none';
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const isCorrect = selectedIndex === question.correct;
+            
+            if (isCorrect) {
+                score++;
+                document.getElementById('currentScore').textContent = score;
+            }
+            
+            // Show explanation
+            document.getElementById('explanation').style.display = 'block';
+            
+            // Highlight correct/incorrect answers
+            const options = document.querySelectorAll('.option-item');
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === question.correct) {
+                    option.classList.add('correct-answer');
+                } else if (index === selectedIndex && !isCorrect) {
+                    option.classList.add('incorrect-answer');
+                }
+            });
+            
+            // Show next button
+            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                document.getElementById('nextQuestionBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('finishQuizBtn').style.display = 'inline-block';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function finishQuiz() {
+            // Hide quiz and show results
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+            // Calculate results
+            const percentage = Math.round((score / currentQuiz.questions.length) * 100);
+            const stars = Math.min(5, Math.ceil(percentage / 20));
+            
+            // Update results
+            document.getElementById('finalScore').textContent = `${score}/${currentQuiz.questions.length}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            document.getElementById('starsEarned').textContent = '⭐'.repeat(stars);
+            
+            // Set result message
+            let title, message;
+            if (percentage >= 90) {
+                title = "🌟 Amazing! 🌟";
+                message = "You're a true plant expert! Keep up the great work!";
+            } else if (percentage >= 70) {
+                title = "🎉 Great Job! 🎉";
+                message = "You did really well! You know a lot about plants!";
+            } else if (percentage >= 50) {
+                title = "👍 Good Work! 👍";
+                message = "Nice job! Keep learning and you'll be a plant expert soon!";
+            } else {
+                title = "🌱 Keep Learning! 🌱";
+                message = "Good try! Practice makes perfect - try the quiz again!";
+            }
+            
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function startNewQuiz() {
+            // Show quiz categories again
+            document.querySelector('.container:nth-of-type(2)').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'none';
+        }
+
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // Add CSS for quiz elements
+        const style = document.createElement('style');
+        style.textContent = `
+            .quiz-category-card {
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 3px solid transparent;
+            }
+            
+            .quiz-category-card:hover {
+                transform: translateY(-5px) scale(1.02);
+                border-color: var(--primary-green);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            }
+            
+            .option-item {
+                display: flex;
+                align-items: center;
+                padding: 15px;
+                margin: 10px 0;
+                border: 2px solid #e9ecef;
+                border-radius: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            }
+            
+            .option-item:hover {
+                transform: translateX(10px);
+                border-color: var(--primary-green);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            .option-letter {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: var(--primary-green);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                margin-right: 15px;
+                font-size: 1.2rem;
+            }
+            
+            .option-text {
+                flex: 1;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            
+            .correct-answer {
+                border-color: var(--primary-green) !important;
+                background: linear-gradient(145deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%) !important;
+            }
+            
+            .correct-answer .option-letter {
+                background: var(--primary-green) !important;
+            }
+            
+            .incorrect-answer {
+                border-color: var(--coral-pink) !important;
+                background: linear-gradient(145deg, rgba(255, 87, 34, 0.1) 0%, rgba(244, 67, 54, 0.1) 100%) !important;
+            }
+            
+            .incorrect-answer .option-letter {
+                background: var(--coral-pink) !important;
+            }
+            
+            .question-card {
+                background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+                border-radius: 20px;
+                padding: 30px;
+                border: 3px solid var(--sunny-yellow);
+            }
+            
+            .question-card h4 {
+                color: var(--primary-green);
+                font-family: 'Nunito', sans-serif;
+                font-weight: 700;
+                text-align: center;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
