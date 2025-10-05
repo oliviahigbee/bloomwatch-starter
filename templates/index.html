@@ -1236,12 +1236,15 @@
         });
 
         async function loadPlantNews() {
+            console.log('Loading plant news...');
             const newsList = document.getElementById("plantNewsList");
             newsList.innerHTML = '<div class="alert alert-info text-center"><i class="fas fa-spinner fa-spin me-2"></i>Loading plant news...</div>';
             
             try {
                 const response = await fetch('/api/plant-news?limit=3');
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Plant news data:', data);
                 
                 if (data.news_items && data.news_items.length > 0) {
                     let newsHTML = '';
@@ -1250,7 +1253,7 @@
                             <div class="card mb-2">
                                 <div class="card-body p-3">
                                     <h6 class="card-title mb-2">
-                                        <a href="${item.link}" target="_blank" class="text-decoration-none">
+                                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="text-decoration-none" onclick="openLink('${item.link}'); return false;">
                                             ${item.title}
                                         </a>
                                     </h6>
@@ -1276,6 +1279,8 @@
             const plantName = document.getElementById('plantSearchInput').value.trim();
             const recipesList = document.getElementById('plantRecipesList');
             
+            console.log('Searching for plant recipes:', plantName);
+            
             if (!plantName) {
                 recipesList.innerHTML = '<div class="alert alert-warning text-center">Please enter a plant name to search.</div>';
                 return;
@@ -1285,7 +1290,9 @@
             
             try {
                 const response = await fetch(`/api/plant-recipes?plant=${encodeURIComponent(plantName)}&limit=3`);
+                console.log('Recipe response status:', response.status);
                 const data = await response.json();
+                console.log('Recipe data:', data);
                 
                 if (data.recipe_items && data.recipe_items.length > 0) {
                     let recipesHTML = '';
@@ -1296,7 +1303,7 @@
                                 <div class="card-body p-3">
                                     <h6 class="card-title mb-2">
                                         <span class="me-2">${typeIcon}</span>
-                                        <a href="${item.link}" target="_blank" class="text-decoration-none">
+                                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="text-decoration-none" onclick="openLink('${item.link}'); return false;">
                                             ${item.title}
                                         </a>
                                     </h6>
@@ -1324,6 +1331,21 @@
                 searchPlantRecipes();
             }
         });
+
+        // Helper function to safely open links
+        function openLink(url) {
+            try {
+                if (url && url.startsWith('http')) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    console.warn('Invalid URL:', url);
+                    alert('Sorry, this link is not available.');
+                }
+            } catch (error) {
+                console.error('Error opening link:', error);
+                alert('Sorry, there was an error opening this link.');
+            }
+        }
     </script>
 
 </body>
