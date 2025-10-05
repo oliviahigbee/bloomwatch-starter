@@ -25,6 +25,10 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
+# SerpAPI key and base URL
+API_KEY = '5eb5f47bd48d32d2a2af5b36799fbb7b4c782b833d6c1c9d9048be5c9afd9066'
+SERPAPI_URL = 'https://serpapi.com/search'
+
 # Performance optimization
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year cache for static files
 
