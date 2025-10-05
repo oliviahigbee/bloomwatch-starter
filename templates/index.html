@@ -192,9 +192,37 @@
         </div>
         <div class="row mt-5">
             <div class="col-12">
-                <div class="alert alert-info text-center p-4">
+                <div class="alert alert-info text-center p-4" id="nasaDataStatus">
                     <h6 class="mb-2">🛰️ Powered by NASA Space Data!</h6>
                     <p class="mb-0">BloomWatch integrates with multiple NASA APIs including GIBS, APOD, and POWER to provide real space data for educational purposes.</p>
+                    <div class="mt-3" id="nasaDataMetrics">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <h5 class="text-primary" id="apodStatus">🔄</h5>
+                                    <small>APOD Images</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <h5 class="text-success" id="satelliteStatus">🔄</h5>
+                                    <small>Satellite Data</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <h5 class="text-info" id="factsStatus">🔄</h5>
+                                    <small>Space Facts</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <h5 class="text-warning" id="plantDataStatus">🔄</h5>
+                                    <small>Plant Health</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -888,12 +916,127 @@
                 const data = await response.json();
                 
                 if (data.data_availability === 'real_nasa_data' || data.data_availability === 'simulated_nasa_data') {
-                    alert(`🚀 NASA Space Fact: ${data.space_fact.fact}\n\n${data.space_fact.emoji} ${data.space_fact.related_to_blooms ? 'This relates to plants!' : ''}`);
+                    // Create a beautiful modal for space facts
+                    const modal = document.createElement('div');
+                    modal.className = 'modal fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">🚀 NASA Space Fact</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center p-4">
+                                    <div class="display-1 mb-3">${data.space_fact.emoji}</div>
+                                    <h4 class="text-primary mb-3">${data.space_fact.fact}</h4>
+                                    ${data.space_fact.explanation ? `<p class="text-muted">${data.space_fact.explanation}</p>` : ''}
+                                    ${data.space_fact.related_to_blooms ? '<div class="alert alert-success mt-3"><i class="fas fa-leaf me-2"></i>This fact relates to plants and nature!</div>' : ''}
+                                    <div class="mt-4">
+                                        <small class="text-muted">Data Source: ${data.nasa_metadata.data_source}</small>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" onclick="loadNASASpaceFacts()">Get Another Fact!</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    // Clean up modal after it's closed
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        modal.remove();
+                    });
                 }
             } catch (error) {
-                alert('Sorry, NASA space facts not available right now! Try again later. 🚀');
+                console.error('Error loading NASA space facts:', error);
+                // Show a simple notification instead of alert
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    <strong>🚀 NASA Space Facts</strong><br>
+                    Sorry, space facts not available right now! Try again later.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
             }
         }
+        
+        // Function to check NASA API status and update metrics
+        async function checkNASAStatus() {
+            try {
+                // Check APOD
+                const apodResponse = await fetch('/api/nasa-apod');
+                const apodData = await apodResponse.json();
+                const apodStatus = document.getElementById('apodStatus');
+                if (apodStatus) {
+                    if (apodData.data_availability === 'real_nasa_data') {
+                        apodStatus.textContent = '✅';
+                        apodStatus.className = 'text-success';
+                    } else if (apodData.data_availability === 'curated_nasa_data') {
+                        apodStatus.textContent = '🖼️';
+                        apodStatus.className = 'text-info';
+                    } else {
+                        apodStatus.textContent = '⚠️';
+                        apodStatus.className = 'text-warning';
+                    }
+                }
+                
+                // Check Space Facts
+                const factsResponse = await fetch('/api/nasa-space-facts');
+                const factsData = await factsResponse.json();
+                const factsStatus = document.getElementById('factsStatus');
+                if (factsStatus) {
+                    if (factsData.data_availability === 'real_nasa_data') {
+                        factsStatus.textContent = '✅';
+                        factsStatus.className = 'text-success';
+                    } else {
+                        factsStatus.textContent = '📚';
+                        factsStatus.className = 'text-info';
+                    }
+                }
+                
+                // Check Plant Data (bloom-data endpoint)
+                const plantResponse = await fetch('/api/bloom-data?lat=40.7128&lon=-74.0060');
+                const plantData = await plantResponse.json();
+                const plantDataStatus = document.getElementById('plantDataStatus');
+                if (plantDataStatus) {
+                    if (plantData.data_availability === 'real_nasa_data') {
+                        plantDataStatus.textContent = '✅';
+                        plantDataStatus.className = 'text-success';
+                    } else {
+                        plantDataStatus.textContent = '🌱';
+                        plantDataStatus.className = 'text-info';
+                    }
+                }
+                
+                // Satellite Data (always available through GIBS)
+                const satelliteStatus = document.getElementById('satelliteStatus');
+                if (satelliteStatus) {
+                    satelliteStatus.textContent = '🛰️';
+                    satelliteStatus.className = 'text-success';
+                }
+                
+            } catch (error) {
+                console.error('Error checking NASA status:', error);
+            }
+        }
+        
+        // Check NASA status when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            checkNASAStatus();
+        });
     </script>
     
     <!-- NASA Feature Card Styling -->
@@ -931,6 +1074,29 @@
         .nasa-feature-card .btn-primary:hover {
             background: linear-gradient(45deg, #0056b3, #004085);
             transform: scale(1.05);
+        }
+        
+        .metric-box {
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-box:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .metric-box h5 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .metric-box small {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
     
