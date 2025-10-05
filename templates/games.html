@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Fun Games - BloomWatch Kids</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Play fun games and learn about plants and nature!">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">🏠 Home</a>
+                <a class="nav-link" href="{{ url_for('explore') }}">🌍 Explore</a>
+                <a class="nav-link" href="{{ url_for('learn') }}">🎓 Learn</a>
+                <a class="nav-link active" href="#">🎮 Games</a>
+                <a class="nav-link" href="{{ url_for('share') }}">📸 Share</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        🎮 Fun Games & Activities! 🎮
+                    </h1>
+                    <p class="lead text-white mb-4">
+                        Play exciting games while learning about plants and nature! 
+                        Challenge yourself with puzzles, quizzes, and interactive activities! 🌱🎯✨
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-stats">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🎮</h3>
+                                    <p class="text-white-50">Games</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h3 class="text-white">🏆</h3>
+                                    <p class="text-white-50">High Score</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Selection -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">🎯 Choose Your Game! 🎯</h2>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('plantMemory')">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-brain me-2"></i>🧠 Plant Memory Game
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Match pairs of plant pictures to improve your memory!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Memory & Recognition</small>
+                            <span class="badge bg-primary">🧠</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('plantQuiz')">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-question-circle me-2"></i>❓ Plant Quiz Challenge
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Answer questions about plants and nature to score points!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Knowledge & Speed</small>
+                            <span class="badge bg-success">❓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('seasonSort')">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i>🌸 Season Sorting
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Sort flowers and plants by their blooming seasons!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Pattern Recognition</small>
+                            <span class="badge bg-warning text-dark">🌸</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('plantPuzzle')">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-puzzle-piece me-2"></i>🧩 Plant Puzzle
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Solve jigsaw puzzles of beautiful plant pictures!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Problem Solving</small>
+                            <span class="badge bg-info">🧩</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('gardenDesigner')">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-palette me-2"></i>🎨 Garden Designer
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Design your own beautiful garden with different plants!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Creativity & Design</small>
+                            <span class="badge bg-danger">🎨</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card game-card h-100 shadow" onclick="startGame('plantBingo')">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-th me-2"></i>🎯 Plant Bingo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Find plants in your neighborhood and mark them on your bingo card!</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Observation & Exploration</small>
+                            <span class="badge bg-dark">🎯</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <div class="container my-5" id="gameArea" style="display: none;">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" id="gameTitle">
+                                <i class="fas fa-gamepad me-2"></i>Game Title
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-primary" id="gameScore">Score: 0</span>
+                                <span class="badge bg-success" id="gameTime">Time: 00:00</span>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="exitGame()">
+                                    <i class="fas fa-times me-1"></i>Exit Game
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body" id="gameContent">
+                        <!-- Game content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>🏆 Game Leaderboard
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>🥇 High Scores</h6>
+                                <div class="list-group">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>🧠 Plant Memory Game</span>
+                                        <span class="badge bg-primary">1,250 points</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>❓ Plant Quiz Challenge</span>
+                                        <span class="badge bg-success">950 points</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>🌸 Season Sorting</span>
+                                        <span class="badge bg-warning text-dark">1,100 points</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>⭐ Achievements Unlocked</h6>
+                                <div class="list-group">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>🎮 First Game Played</span>
+                                        <span class="badge bg-success">Unlocked!</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>🏆 High Score Master</span>
+                                        <span class="badge bg-warning text-dark">Unlocked!</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>🧠 Memory Master</span>
+                                        <span class="badge bg-primary">Locked</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fun Activities -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">🎨 Fun Activities! 🎨</h2>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-palette me-2"></i>🎨 Color the Plants
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="coloringArea" class="text-center">
+                            <canvas id="plantColoringCanvas" width="300" height="300" style="border: 2px solid #ddd; cursor: crosshair;"></canvas>
+                            <div class="mt-3">
+                                <button class="btn btn-primary btn-sm me-2" onclick="selectColor('#FF6B6B')">🔴</button>
+                                <button class="btn btn-success btn-sm me-2" onclick="selectColor('#4ECDC4')">🟢</button>
+                                <button class="btn btn-warning btn-sm me-2" onclick="selectColor('#FFEAA7')">🟡</button>
+                                <button class="btn btn-info btn-sm me-2" onclick="selectColor('#74B9FF')">🔵</button>
+                                <button class="btn btn-secondary btn-sm" onclick="clearCanvas()">🧹 Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-dice me-2"></i>🎲 Plant Story Generator
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="storyArea">
+                            <h6>Your Plant Story:</h6>
+                            <div id="storyText" class="alert alert-light" style="min-height: 200px;">
+                                Click "Generate Story" to create a fun plant adventure!
+                            </div>
+                            <button class="btn btn-info w-100" onclick="generateStory()">
+                                <i class="fas fa-magic me-2"></i>🌟 Generate New Story!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>🌱 BloomWatch Kids</h6>
+                    <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-rocket me-1"></i>
+                        Powered by NASA Space Data! 🌟
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/games.js') }}"></script>
+</body>
+</html>
