@@ -1142,5 +1142,28 @@
             document.body.appendChild(installButton);
         });
     </script>
+
+    <!-- Loads Fun Plant Facts -->
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const insightsList = document.getElementById("insightsList");
+
+            try {
+                const response = await fetch("/api/nasa-space-facts");
+                const data = await response.json();
+                const fact = data.space_fact;
+
+                insightsList.innerHTML = `
+                    <li><strong>${fact.emoji} ${fact.fact}</strong></li>
+                    <li class="text-muted">${fact.explanation}</li>
+                `;
+            } catch (error) {
+                insightsList.innerHTML = `
+                    <li class="text-danger"><i class="fas fa-exclamation-circle me-2"></i>Failed to load space facts.</li>
+                `;
+            }
+        });
+    </script>
+
 </body>
 </html>
