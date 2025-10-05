@@ -790,7 +790,11 @@ class NASADataIntegrator:
         if parameters is None:
             parameters = 'T2M,PRECTOT,ALLSKY_SFC_SW_DWN,RH2M,WS2M,PS,TS,CLRSKY_SFC_SW_DWN'
         
-        cache_key = f"power_{lat}_{lon}_{start_date}_{end_date}_{parameters}"
+        # Strip hyphens for NASA POWER
+        start_int = int(start_date.replace('-', ''))
+        end_int = int(end_date.replace('-', ''))
+
+        cache_key = f"power_{lat}_{lon}_{start_int}_{end_int}_{parameters}"
         if cache_key in self.data_cache:
             return self.data_cache[cache_key]
         
@@ -800,8 +804,8 @@ class NASADataIntegrator:
                 'community': 'RE',
                 'longitude': lon,
                 'latitude': lat,
-                'start': start_date,
-                'end': end_date,
+                'start': start_int,
+                'end': end_int,
                 'format': 'JSON'
             }
             
@@ -3415,6 +3419,10 @@ def get_nasa_gibs_imagery(lat, lon, product='MODIS_Terra_CorrectedReflectance_Tr
 
 def get_nasa_power_data(lat, lon, start_date, end_date):
     """Get real NASA POWER climate data"""
+    # Strip hyphens for NASA POWER API
+    start_int = int(start_date.replace('-', ''))
+    end_int = int(end_date.replace('-', ''))
+
     try:
         # NASA POWER API doesn't require authentication for basic requests
         params = {
@@ -3422,8 +3430,8 @@ def get_nasa_power_data(lat, lon, start_date, end_date):
             'community': 'RE',
             'longitude': lon,
             'latitude': lat,
-            'start': start_date,
-            'end': end_date,
+            'start': start_int,
+            'end': end_int,
             'format': 'JSON'
         }
         
