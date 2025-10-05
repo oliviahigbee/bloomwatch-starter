@@ -150,6 +150,107 @@
         </div>
     </div>
 
+
+    <!-- Analysis Section -->
+    <div class="container my-5" id="analysisSection">
+        <div class="row">
+            <!-- Time Series Chart -->
+            <div class="col-lg-10">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">📈 How Plants Grow Over Time!</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="timeSeriesChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Key Metrics -->
+            <div class="col-lg-2">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">📊 Plant Health Scoreboard!</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>🌱 How Green Are the Plants?</span>
+                                <span class="fw-bold" id="currentIntensity">-</span>
+                            </div>
+                            <div class="progress mt-1">
+                                <div class="progress-bar bg-success" id="intensityBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>🌸 Best Blooming Day</span>
+                                <span class="fw-bold" id="peakDate">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>📈 Are Plants Growing More?</span>
+                                <span class="fw-bold" id="trend">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item">
+                            <div class="d-flex justify-content-between">
+                                <span>🌺 Best Season for Flowers</span>
+                                <span class="fw-bold" id="peakSeason">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI & Advanced Analytics -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow" id="predictionCard" style="display: none;">
+                    <!-- AI Prediction content will be loaded here -->
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="card shadow" id="anomaliesCard" style="display: none;">
+                            <!-- Anomaly detection content will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow" id="climateCard" style="display: none;">
+                            <!-- Climate correlation content will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow" id="nasaAttributionCard" style="display: none;">
+                            <!-- NASA data attribution will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Citizen Science & 3D Visualization -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow" id="citizenCard" style="display: none;">
+                    <!-- Citizen science content will be loaded here -->
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow" id="globeCard" style="display: none;">
+                    <!-- 3D Globe content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Fun Learning Section -->
     <div class="container my-5">
         <div class="row">
