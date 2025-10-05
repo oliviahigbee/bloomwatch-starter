@@ -64,7 +64,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-seedling me-2"></i>🌱 BloomWatch Kids
+                🌱 BloomWatch Kids
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link active" href="{{ url_for('index') }}">🏠 Home</a>
@@ -73,7 +73,7 @@
                 <a class="nav-link" href="{{ url_for('games') }}">🎮 Games</a>
                 <a class="nav-link" href="{{ url_for('share') }}">📸 Share</a>
                 <span class="navbar-text ms-3" id="currentLocationDisplay">
-                    <i class="fas fa-rocket me-1"></i>Powered by NASA Space Data! 🚀
+                    🚀 Powered by NASA Space Data!
                 </span>
             </div>
         </div>
@@ -93,16 +93,16 @@
                     </p>
                     <div class="d-flex flex-wrap gap-3">
                         <a href="{{ url_for('explore') }}" class="btn btn-light btn-lg">
-                            <i class="fas fa-globe me-2"></i>🌍 Explore the World Map
+                            🌍 Explore the World Map
                         </a>
                         <a href="{{ url_for('learn') }}" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-book me-2"></i>🎓 Learn About Plants
+                            🎓 Learn About Plants
                         </a>
                         <a href="{{ url_for('games') }}" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-gamepad me-2"></i>🎮 Play Games
+                            🎮 Play Games
                         </a>
                         <a href="{{ url_for('share') }}" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-camera me-2"></i>📸 Share Photos
+                            📸 Share Photos
                         </a>
                     </div>
                 </div>
@@ -157,9 +157,8 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Explore the World</h5>
                         <p class="card-text">Use our interactive map to discover plants from around the globe!</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-center">
                             <small class="text-muted">Interactive Map</small>
-                            <span class="badge bg-primary">🌍</span>
                         </div>
                     </div>
                 </div>
@@ -173,9 +172,8 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Learn About Plants</h5>
                         <p class="card-text">Discover amazing facts about plants, nature, and how they grow!</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-center">
                             <small class="text-muted">Educational</small>
-                            <span class="badge bg-success">🎓</span>
                         </div>
                     </div>
                 </div>
@@ -189,9 +187,8 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Play Fun Games</h5>
                         <p class="card-text">Enjoy interactive games while learning about plants and nature!</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-center">
                             <small class="text-muted">Interactive Games</small>
-                            <span class="badge bg-warning text-dark">🎮</span>
                         </div>
                     </div>
                 </div>
@@ -205,9 +202,8 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Share Your Photos</h5>
                         <p class="card-text">Take photos of plants and share them with other kids!</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-center">
                             <small class="text-muted">Citizen Science</small>
-                            <span class="badge bg-info">📸</span>
                         </div>
                     </div>
                 </div>
@@ -215,136 +211,30 @@
         </div>
     </div>
 
-    <!-- Controls Section -->
+    <!-- Quick Actions Section -->
     <div class="container my-5">
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-magic me-2"></i>🎮 Fun Learning Controls
-                        </h5>
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">🎯 Quick Actions</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
-                                <label for="citySelect" class="form-label">🌍 Choose a Place to Explore!</label>
-                                <select class="form-select" id="citySelect" onchange="updateCity()">
-                                    <option value="global">🌍 See the Whole World!</option>
-                                    <option value="new-york">🗽 New York City</option>
-                                    <option value="london">🏰 London</option>
-                                    <option value="tokyo">🗾 Tokyo</option>
-                                    <option value="sao-paulo">🌴 São Paulo</option>
-                                    <option value="sydney">🦘 Sydney</option>
-                                    <option value="cape-town">🏔️ Cape Town</option>
-                                    <option value="mumbai">🕌 Mumbai</option>
-                                    <option value="paris">🗼 Paris</option>
-                                    <option value="los-angeles">🌴 Los Angeles</option>
-                                    <option value="buenos-aires">🌺 Buenos Aires</option>
-                                    <option value="cairo">🏺 Cairo</option>
-                                    <option value="moscow">❄️ Moscow</option>
-                                </select>
+                            <div class="col-md-4 mb-3">
+                                <a href="{{ url_for('explore') }}" class="btn btn-primary w-100 btn-lg">
+                                    🔮 Predict Plant Growth!
+                                </a>
                             </div>
-                            <div class="col-md-3">
-                                <label for="timeRange" class="form-label">⏰ How Far Back in Time?</label>
-                                <select class="form-select" id="timeRange" onchange="updateTimeRange()">
-                                    <option value="1">📅 Last Year</option>
-                                    <option value="3">📅 Last 3 Years</option>
-                                    <option value="5" selected>📅 Last 5 Years</option>
-                                    <option value="10">📅 Last 10 Years</option>
-                                </select>
+                            <div class="col-md-4 mb-3">
+                                <a href="{{ url_for('games') }}" class="btn btn-warning w-100 btn-lg">
+                                    🔍 Find Special Plants!
+                                </a>
                             </div>
-                            <div class="col-md-3">
-                                <label for="vegetationIndex" class="form-label">🌿 Plant Health Meter</label>
-                                <select class="form-select" id="vegetationIndex" onchange="updateVegetationIndex()">
-                                    <option value="ndvi" selected>🌱 Green Plant Health</option>
-                                    <option value="evi">🌿 Enhanced Plant Health</option>
-                                    <option value="savi">🌾 Soil-Adjusted Health</option>
-                                    <option value="gndvi">🌳 Green Leaf Health</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div>
-                                    <button class="btn btn-success w-100" onclick="refreshData()">
-                                        <i class="fas fa-sync-alt me-2"></i>🔄 Get New Data!
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Fun Learning Features Row -->
-                        <div class="row mt-3">
-                            <div class="col-md-3">
-                                <button class="btn btn-primary w-100" onclick="predictBloom()">
-                                    <i class="fas fa-crystal-ball me-2"></i>🔮 Predict Plant Growth!
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-warning w-100" onclick="detectAnomalies()">
-                                    <i class="fas fa-search me-2"></i>🔍 Find Special Plants!
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-info w-100" onclick="analyzeClimate()">
-                                    <i class="fas fa-thermometer-half me-2"></i>🌡️ Weather & Plants
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-success w-100" onclick="showCitizenScience()">
-                                    <i class="fas fa-users me-2"></i>🌱 Citizen Science
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Additional Features Row -->
-                        <div class="row mt-3">
-                            <div class="col-md-3">
-                                <button class="btn btn-dark w-100" onclick="view3DGlobe()">
-                                    <i class="fas fa-globe me-2"></i>🌍 3D Earth Explorer
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-primary w-100" onclick="showObservationForm()">
-                                    <i class="fas fa-plus me-2"></i>📝 Share Observation
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <!-- Empty space for future features -->
-                            </div>
-                        </div>
-                        
-                        <!-- Fun Learning Tools Row -->
-                        <div class="row mt-3">
-                            <div class="col-md-2">
-                                <button class="btn btn-success w-100" onclick="app.exportData('json')">
-                                    <i class="fas fa-download me-2"></i>📄 Save Data
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-info w-100" onclick="app.exportData('csv')">
-                                    <i class="fas fa-file-csv me-2"></i>📊 Save Chart
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-warning w-100" onclick="app.exportData('geojson')">
-                                    <i class="fas fa-map me-2"></i>🗺️ Save Map
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-primary w-100" onclick="app.shareData('link')">
-                                    <i class="fas fa-share me-2"></i>📤 Share with Friends!
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-secondary w-100" onclick="toggleRealTimeUpdates()">
-                                    <i class="fas fa-sync-alt me-2" id="realTimeIcon"></i><span id="realTimeText">🔄 Live Updates ON</span>
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-dark w-100" onclick="showAdvancedAnalytics()">
-                                    <i class="fas fa-chart-pie me-2"></i>📈 Fun Stats
-                                </button>
+                            <div class="col-md-4 mb-3">
+                                <a href="{{ url_for('share') }}" class="btn btn-info w-100 btn-lg">
+                                    🌡️ Weather & Plants
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -358,11 +248,9 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-map me-2"></i><span id="mapTitle">🌍 Amazing Plant World Map</span>
-                        </h5>
-                        <small class="text-muted" id="mapDescription">Click on the colorful dots to learn about plants in different places! 🌱</small>
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">🌍 Amazing Plant World Map</h5>
+                        <small class="text-muted">Click on the colorful dots to learn about plants in different places! 🌱</small>
                     </div>
                     <div class="card-body p-0">
                         <div id="globalMap" style="height: 500px;"></div>
@@ -378,10 +266,8 @@
             <!-- Time Series Chart -->
             <div class="col-lg-10">
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-line me-2"></i>📈 How Plants Grow Over Time!
-                        </h5>
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">📈 How Plants Grow Over Time!</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="timeSeriesChart" height="300"></canvas>
@@ -392,10 +278,8 @@
             <!-- Key Metrics -->
             <div class="col-lg-2">
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-bar me-2"></i>📊 Plant Health Scoreboard!
-                        </h5>
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">📊 Plant Health Scoreboard!</h5>
                     </div>
                     <div class="card-body">
                         <div class="metric-item mb-3">
@@ -479,10 +363,8 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-leaf me-2"></i>🌿 Fun Plant Facts & How to Help Nature!
-                        </h5>
+                    <div class="card-header bg-light text-center">
+                        <h5 class="mb-0">🌿 Fun Plant Facts & How to Help Nature!</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -514,10 +396,7 @@
                     <p class="mb-0">Learning about plants and nature with real NASA space data! 🚀</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">
-                        <i class="fas fa-rocket me-1"></i>
-                        Powered by NASA Space Data! 🌟
-                    </p>
+                    <p class="mb-0">🚀 Powered by NASA Space Data! 🌟</p>
                 </div>
             </div>
         </div>
