@@ -285,7 +285,7 @@
     <div class="container my-5" id="analysisSection">
         <div class="row">
             <!-- Time Series Chart -->
-            <div class="col-lg-10">
+            <div class="col-lg-12">
                 <div class="card shadow mb-4">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
@@ -297,9 +297,14 @@
                     </div>
                 </div>
             </div>
-            
+        </div>
+    </div>
+    
+    <!-- Key Metrics and Citizen Science -->
+    <div class="container my-5" id="analysisSection">
+        <div class="row">
             <!-- Key Metrics -->
-            <div class="col-lg-2">
+            <div class="col-lg-12">
                 <div class="card shadow mb-4">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
@@ -342,6 +347,52 @@
             </div>
         </div>
         
+        <!-- Serp API Content -->
+        <form id="city-form">
+            <label for="city">: </label>
+            <input type="text" id="city" name="city" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <h2>Local Plants:</h2>
+        <ul id="plants-list"></ul>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            // Handle form submission
+            $('#city-form').submit(function(event) {
+                event.preventDefault();
+                var city = $('#city').val().trim();
+
+                if (city) {
+                    // Fetch plants for the entered city
+                    $.get(`/get-plants?city=${city}`, function(data) {
+                        // Clear previous results
+                        $('#plants-list').empty();
+
+                        if (data.error) {
+                            $('#plants-list').append('<li>' + data.error + '</li>');
+                        } else {
+                            // Display each plant result
+                            data.forEach(function(plant) {
+                                $('#plants-list').append(
+                                    `<li>
+                                        <strong>${plant.title}</strong><br>
+                                        <a href="${plant.link}" target="_blank">${plant.link}</a><br>
+                                        <p>${plant.snippet}</p>
+                                    </li>`
+                                );
+                            });
+                        }
+                    }).fail(function() {
+                        $('#plants-list').append('<li>Error fetching data</li>');
+                    });
+                } else {
+                    alert('Please enter a city.');
+                }
+            });
+        </script>
+
         <!-- AI & Advanced Analytics -->
         <div class="row mb-4">
             <div class="col-lg-8">

@@ -3255,5 +3255,37 @@ def get_real_time_updates():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+    # Function to get local plants for a given city
+    def get_local_plants(city_name):
+        query = f"local plants in {city_name}"
+        params = {
+            'q': query,
+            'location': city_name,
+            'api_key': API_KEY,
+            'engine': 'google'
+        }
+
+        response = requests.get(SERPAPI_URL, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('organic_results', []) # organic_results returns non-paid results
+        else:
+            return []
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    # Flask route that accepts a city as a query parameter.
+    # The frontend HTML will make a request to this route and display the results.
+    @app.route('/get-plants', methods=['GET'])
+    def get_plants():
+        city = request.args.get('city')
+        if city:
+            plants = get_local_plants(city)
+            return jsonify(plants)
+        else:
+            return jsonify({"error": "City is required"}), 400
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
