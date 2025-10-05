@@ -842,7 +842,7 @@
                 const response = await fetch('/api/nasa-apod');
                 const data = await response.json();
                 
-                if (data.data_availability === 'real_nasa_data') {
+                if (data.data_availability === 'real_nasa_data' || data.data_availability === 'simulated_nasa_data') {
                     // Create modal to show NASA picture
                     const modal = document.createElement('div');
                     modal.className = 'modal fade';
@@ -878,7 +878,7 @@
                 const response = await fetch('/api/nasa-space-facts');
                 const data = await response.json();
                 
-                if (data.data_availability === 'real_nasa_data') {
+                if (data.data_availability === 'real_nasa_data' || data.data_availability === 'simulated_nasa_data') {
                     alert(`🚀 NASA Space Fact: ${data.space_fact.fact}\n\n${data.space_fact.emoji} ${data.space_fact.related_to_blooms ? 'This relates to plants!' : ''}`);
                 }
             } catch (error) {

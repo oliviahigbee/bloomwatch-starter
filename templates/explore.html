@@ -42,11 +42,11 @@
             <div class="row align-items-center">
                 <div class="col-lg-8">
                     <h1 class="display-4 fw-bold text-white mb-4">
-                        🌍 Explore Amazing Plants Around the World!
+                        🛰️ Real NASA Satellite Data Explorer!
                     </h1>
                     <p class="lead text-white mb-4">
-                        Use our interactive world map to discover plants and flowers from different countries! 
-                        Click on the colorful dots to learn about nature in different places! 🌱✨
+                        Click anywhere on the map to get REAL NASA satellite data from space! 
+                        See Earth from satellites, get plant health data, and explore with actual NASA imagery! 🚀🌍✨
                     </p>
                 </div>
                 <div class="col-lg-4">
@@ -138,9 +138,9 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <span id="mapTitle">🌍 Amazing Plant World Map</span>
+                            <span id="mapTitle">🛰️ NASA Satellite Data Map</span>
                         </h5>
-                        <small class="text-muted" id="mapDescription">Click on the colorful dots to learn about plants in different places! 🌱</small>
+                        <small class="text-muted" id="mapDescription">Click anywhere on the map to get REAL NASA satellite data from space! 🚀🌱</small>
                     </div>
                     <div class="card-body p-0">
                         <div id="globalMap" style="height: 600px;"></div>
@@ -202,6 +202,24 @@
                                 <span>🌺 Best Season for Flowers</span>
                                 <span class="fw-bold" id="peakSeason">-</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NASA Data Display Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow border-primary" id="nasaDataCard" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            🛰️ NASA Satellite Data Retrieved!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="nasaDataContent">
+                            <!-- NASA data will be populated here -->
                         </div>
                     </div>
                 </div>

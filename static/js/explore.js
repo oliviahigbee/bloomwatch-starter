@@ -153,6 +153,9 @@ class ExploreApp {
             // Update the plant health scoreboard with real data
             this.updatePlantHealthScoreboard(lat, lng, data);
             
+            // Show NASA data prominently
+            this.showNASAData(data, lat, lng);
+            
         } catch (error) {
             console.error('Error fetching NASA data:', error);
             // Fallback popup
@@ -421,6 +424,43 @@ class ExploreApp {
                 progressBar.textContent = '75%';
                 progressBar.className = 'progress-bar bg-success';
             }
+        }
+    }
+    
+    showNASAData(data, lat, lng) {
+        // Show NASA data prominently on the page
+        const nasaCard = document.getElementById('nasaDataCard');
+        const nasaContent = document.getElementById('nasaDataContent');
+        
+        if (nasaCard && nasaContent) {
+            let content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🛰️ NASA Data Source</h6>
+                        <p><strong>Status:</strong> ${data.data_availability}</p>
+                        <p><strong>Location:</strong> ${lat}, ${lng}</p>
+                        ${data.satellite_imagery ? `
+                            <p><strong>Satellite:</strong> ${data.satellite_imagery.data_source}</p>
+                            <p><strong>Product:</strong> ${data.satellite_imagery.product}</p>
+                            <p><strong>Date:</strong> ${data.satellite_imagery.date}</p>
+                        ` : ''}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🌱 Plant Health Data</h6>
+                        ${data.data && data.data.length > 0 ? `
+                            <p><strong>Latest NDVI:</strong> ${data.data[data.data.length - 1].ndvi.toFixed(3)}</p>
+                            <p><strong>Health Status:</strong> ${this.getHealthStatus(data.data[data.data.length - 1])}</p>
+                            <p><strong>Data Points:</strong> ${data.data.length}</p>
+                        ` : '<p>No plant data available</p>'}
+                    </div>
+                </div>
+            `;
+            
+            nasaContent.innerHTML = content;
+            nasaCard.style.display = 'block';
+            
+            // Scroll to the NASA data section
+            nasaCard.scrollIntoView({ behavior: 'smooth' });
         }
     }
 }
