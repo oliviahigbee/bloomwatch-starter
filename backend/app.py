@@ -2650,6 +2650,132 @@ def get_nasa_space_facts():
         }
     })
 
+@app.route('/api/nasa-eonet')
+def get_nasa_eonet():
+    """Get NASA EONET (Earth Observatory Natural Event Tracker) data"""
+    try:
+        # Get recent natural events from NASA EONET
+        url = f"https://eonet.gsfc.nasa.gov/api/v3/events?days=30&limit=10"
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            events = data.get('events', [])
+            
+            # Filter for kid-friendly events related to nature/plants
+            kid_friendly_events = []
+            for event in events[:5]:  # Limit to 5 events
+                title = event.get('title', '')
+                categories = event.get('categories', [])
+                
+                # Check if it's related to plants/nature and kid-friendly
+                if any(cat.get('title', '').lower() in ['wildfires', 'dust', 'storms', 'volcanoes'] for cat in categories):
+                    kid_friendly_events.append({
+                        'title': title,
+                        'date': event.get('date', ''),
+                        'coordinates': event.get('geometry', [{}])[0].get('coordinates', [0, 0]) if event.get('geometry') else [0, 0],
+                        'category': categories[0].get('title', 'Natural Event') if categories else 'Natural Event',
+                        'description': f"NASA satellite detected {title.lower()} affecting plant life"
+                    })
+            
+            return jsonify({
+                "data_availability": "real_nasa_data",
+                "events": kid_friendly_events,
+                "total_events": len(events),
+                "nasa_metadata": {
+                    "data_source": "NASA EONET",
+                    "kid_friendly": True,
+                    "description": "Real-time natural events affecting Earth's plant life"
+                }
+            })
+        else:
+            raise Exception(f"EONET API returned status {response.status_code}")
+            
+    except Exception as e:
+        print(f"Error getting NASA EONET data: {e}")
+        # Fallback to simulated data
+        return jsonify({
+            "data_availability": "simulated_nasa_data",
+            "events": [
+                {
+                    'title': 'Spring Bloom in California',
+                    'date': '2024-03-15',
+                    'coordinates': [-119.4179, 36.7783],
+                    'category': 'Vegetation',
+                    'description': 'NASA satellite detected increased plant growth in California'
+                }
+            ],
+            "nasa_metadata": {
+                "data_source": "Simulated EONET Data",
+                "kid_friendly": True
+            }
+        })
+
+@app.route('/api/nasa-mars-rover')
+def get_nasa_mars_photos():
+    """Get NASA Mars Rover photos for kids to see space exploration"""
+    try:
+        api_key = os.getenv('NASA_API_KEY')
+        if not api_key:
+            raise Exception("NASA API key not configured")
+        
+        # Get recent Mars rover photos
+        url = f"https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos"
+        params = {
+            'sol': 4000,  # Mars day number (recent)
+            'api_key': api_key,
+            'page': 1
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            photos = data.get('photos', [])
+            
+            if photos:
+                # Select a random photo
+                import random
+                selected_photo = random.choice(photos[:5])  # Pick from first 5
+                
+                return jsonify({
+                    "data_availability": "real_nasa_data",
+                    "mars_photo": {
+                        'image_url': selected_photo.get('img_src', ''),
+                        'earth_date': selected_photo.get('earth_date', ''),
+                        'camera': selected_photo.get('camera', {}).get('full_name', 'Mars Camera'),
+                        'rover': selected_photo.get('rover', {}).get('name', 'Curiosity'),
+                        'sol': selected_photo.get('sol', 0)
+                    },
+                    "nasa_metadata": {
+                        "data_source": "NASA Mars Rover Photos",
+                        "kid_friendly": True,
+                        "educational_value": "Shows real space exploration on Mars"
+                    }
+                })
+            else:
+                raise Exception("No Mars photos available")
+        else:
+            raise Exception(f"Mars API returned status {response.status_code}")
+            
+    except Exception as e:
+        print(f"Error getting NASA Mars photos: {e}")
+        # Fallback to simulated data
+        return jsonify({
+            "data_availability": "simulated_nasa_data",
+            "mars_photo": {
+                'image_url': 'https://mars.nasa.gov/system/resources/detail_files/22449_curiosity-selfie-sol-3174-v2-320x240.jpg',
+                'earth_date': '2024-03-15',
+                'camera': 'Mars Hand Lens Imager',
+                'rover': 'Curiosity',
+                'sol': 4000
+            },
+            "nasa_metadata": {
+                "data_source": "Simulated Mars Rover Data",
+                "kid_friendly": True
+            }
+        })
+
 @app.route('/api/bloom-data')
 def get_bloom_data():
     """Get bloom data using real NASA APIs"""

@@ -85,11 +85,11 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold text-white mb-4">
-                        🌟 Discover Amazing Plants Around the World!
+                        🚀 NASA Space Data Meets Plant Science!
                     </h1>
                     <p class="lead text-white mb-4">
-                        Join us on an exciting adventure to learn about plants, flowers, and nature! 
-                        We use real NASA satellite pictures from space to see how plants grow all over our beautiful Earth! 🌍✨
+                        Explore plants around the world using REAL NASA satellite data from space! 
+                        See Earth from satellites, get daily space pictures, and learn amazing space facts while discovering nature! 🌍🛰️✨
                     </p>
                     <div class="d-flex flex-wrap gap-3">
                         <a href="{{ url_for('explore') }}" class="btn btn-light btn-lg">
@@ -135,6 +135,66 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NASA Features Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">🚀 Real NASA Space Data Features!</h2>
+                <p class="text-center text-muted mb-5">BloomWatch uses actual NASA satellite data to teach kids about Earth and space science!</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow border-0 nasa-feature-card">
+                    <div class="card-body text-center">
+                        <div class="nasa-feature-icon mb-3">🛰️</div>
+                        <h5 class="card-title">Real Satellite Imagery</h5>
+                        <p class="card-text">See Earth from space using NASA GIBS satellite images! Click anywhere on the map to get real satellite data.</p>
+                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-sm">Try It Now!</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow border-0 nasa-feature-card">
+                    <div class="card-body text-center">
+                        <div class="nasa-feature-icon mb-3">🌌</div>
+                        <h5 class="card-title">Daily Space Pictures</h5>
+                        <p class="card-text">Get fresh space images every day from NASA's Astronomy Picture of the Day (APOD)!</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadNASAPicture()">See Today's Picture!</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow border-0 nasa-feature-card">
+                    <div class="card-body text-center">
+                        <div class="nasa-feature-icon mb-3">🚀</div>
+                        <h5 class="card-title">Space Facts</h5>
+                        <p class="card-text">Learn amazing facts about space, satellites, and Earth science from real NASA data!</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadNASASpaceFacts()">Get Space Facts!</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow border-0 nasa-feature-card">
+                    <div class="card-body text-center">
+                        <div class="nasa-feature-icon mb-3">🌱</div>
+                        <h5 class="card-title">Plant Health Data</h5>
+                        <p class="card-text">See how healthy plants are using real NASA satellite vegetation data from space!</p>
+                        <a href="{{ url_for('explore') }}" class="btn btn-primary btn-sm">Explore Plants!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h6 class="mb-2">🛰️ Powered by NASA Space Data!</h6>
+                    <p class="mb-0">BloomWatch integrates with multiple NASA APIs including GIBS, APOD, and POWER to provide real space data for educational purposes.</p>
                 </div>
             </div>
         </div>
@@ -774,6 +834,96 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}?v=2.7"></script>
+    
+    <!-- NASA API Functions -->
+    <script>
+        async function loadNASAPicture() {
+            try {
+                const response = await fetch('/api/nasa-apod');
+                const data = await response.json();
+                
+                if (data.data_availability === 'real_nasa_data') {
+                    // Create modal to show NASA picture
+                    const modal = document.createElement('div');
+                    modal.className = 'modal fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">🚀 NASA Astronomy Picture of the Day</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <img src="${data.image_url}" class="img-fluid mb-3" alt="NASA APOD">
+                                    <p class="text-muted">${data.explanation}</p>
+                                    <p><strong>Data Source:</strong> ${data.nasa_metadata.data_source}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                }
+            } catch (error) {
+                alert('Sorry, NASA space picture not available right now! Try again later. 🚀');
+            }
+        }
+        
+        async function loadNASASpaceFacts() {
+            try {
+                const response = await fetch('/api/nasa-space-facts');
+                const data = await response.json();
+                
+                if (data.data_availability === 'real_nasa_data') {
+                    alert(`🚀 NASA Space Fact: ${data.space_fact.fact}\n\n${data.space_fact.emoji} ${data.space_fact.related_to_blooms ? 'This relates to plants!' : ''}`);
+                }
+            } catch (error) {
+                alert('Sorry, NASA space facts not available right now! Try again later. 🚀');
+            }
+        }
+    </script>
+    
+    <!-- NASA Feature Card Styling -->
+    <style>
+        .nasa-feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .nasa-feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+            border-color: #007bff;
+        }
+        
+        .nasa-feature-icon {
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .nasa-feature-card .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .nasa-feature-card .btn-primary:hover {
+            background: linear-gradient(45deg, #0056b3, #004085);
+            transform: scale(1.05);
+        }
+    </style>
     
     <!-- Service Worker Registration -->
     <script>
