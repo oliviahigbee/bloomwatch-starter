@@ -2703,6 +2703,55 @@ def get_nasa_space_facts():
         }
     })
 
+# How you can help plants!
+@app.route('/api/help-plants')
+def get_help_plants():
+    help_plants = [
+        {
+            "action": "Plant trees and flowers",
+            "explanation": "Trees clean the air and give animals homes.",
+            "related_to_blooms": True,
+            "emoji": "🌳"
+        },
+        {
+            "action": "Water plants gently",
+            "explanation": "Use just enough so roots get a drink but don’t drown.",
+            "related_to_blooms": False,
+            "emoji": "🚀"
+        },
+        {
+            "action": "Reuse water",
+            "explanation": "Collect rainwater or leftover drinking water for plants.",
+            "related_to_blooms": False,
+            "emoji": "🌍"
+        },
+        {
+            "action": "Grow native plants",
+            "explanation": "They need less water and attract bees and butterflies.",
+            "related_to_blooms": True,
+            "emoji": "👁️"
+        },
+        {
+            "action": "Build a pollinator garden",
+            "explanation": "Plant flowers that bees and butterflies love.",
+            "related_to_blooms": True,
+            "emoji": "👁️"
+        }
+    ]
+    
+    import random
+    selected_fact = random.choice(help_plants)
+    
+    return jsonify({
+        'data_availability': 'real_nasa_data',
+        'plant_helper': selected_fact,
+        'nasa_metadata': {
+            'data_source': 'NASA Educational Content',
+            'kid_friendly': True,
+            'educational_value': 'High - Space science fun facts'
+        }
+    })
+
 @app.route('/api/nasa-eonet')
 def get_nasa_eonet():
     """Get NASA EONET (Earth Observatory Natural Event Tracker) data"""
