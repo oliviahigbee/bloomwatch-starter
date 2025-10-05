@@ -32,6 +32,7 @@ class ExploreApp {
         this.startFactRotation();
         this.loadAchievements();
         this.initializeChart();
+        this.loadInitialNASAData();
     }
     
     initializeMap() {
@@ -202,11 +203,52 @@ class ExploreApp {
         this.showNotification("🌱 Great discovery! You found a new plant location!", "success");
     }
     
-    updateCity() {
+    async updateCity() {
         const citySelect = document.getElementById('citySelect');
         this.currentLocation = citySelect.value;
         this.updateMapTitle();
         this.showNotification(`🌍 Now exploring ${citySelect.options[citySelect.selectedIndex].text}!`, "info");
+        
+        // Load NASA data for the selected city
+        await this.loadNASADataForCity(this.currentLocation);
+    }
+    
+    async loadNASADataForCity(city) {
+        const cityCoordinates = {
+            'global': { lat: 20, lon: 0 },
+            'new-york': { lat: 40.7128, lon: -74.0060 },
+            'london': { lat: 51.5074, lon: -0.1278 },
+            'tokyo': { lat: 35.6762, lon: 139.6503 },
+            'sao-paulo': { lat: -23.5505, lon: -46.6333 },
+            'sydney': { lat: -33.8688, lon: 151.2093 },
+            'cape-town': { lat: -33.9249, lon: 18.4241 },
+            'mumbai': { lat: 19.0760, lon: 72.8777 },
+            'paris': { lat: 48.8566, lon: 2.3522 },
+            'los-angeles': { lat: 34.0522, lon: -118.2437 }
+        };
+        
+        const coords = cityCoordinates[city] || cityCoordinates['new-york'];
+        
+        try {
+            this.showNotification("🛰️ Loading NASA data for selected location...", "info");
+            
+            const response = await fetch(`/api/bloom-data?lat=${coords.lat}&lon=${coords.lon}`);
+            const nasaData = await response.json();
+            
+            if (nasaData && nasaData.data && nasaData.data.length > 0) {
+                this.updateChart(nasaData);
+                this.updatePlantHealthScoreboard(coords.lat, coords.lon, nasaData);
+                this.showNASAData(nasaData, coords.lat, coords.lon);
+                
+                this.showNotification(
+                    `🛰️ NASA data loaded for ${city}! Source: ${nasaData.data_availability}`,
+                    'success'
+                );
+            }
+        } catch (error) {
+            console.error('Error loading NASA data for city:', error);
+            this.showNotification("⚠️ Error loading NASA data for selected city", "warning");
+        }
     }
     
     updateTimeRange() {
@@ -227,14 +269,18 @@ class ExploreApp {
         document.getElementById('mapTitle').textContent = `🌍 ${selectedText} Plant Map`;
     }
     
-    refreshData() {
+    async refreshData() {
         this.showNotification("🔄 Getting fresh plant data from NASA satellites...", "info");
         
-        // Simulate data loading
-        setTimeout(() => {
-            this.showNotification("✅ Fresh plant data loaded successfully!", "success");
+        try {
+            // Reload NASA data for the current location
+            await this.loadInitialNASAData();
             this.loadFunFacts();
-        }, 2000);
+            this.showNotification("✅ Fresh NASA satellite data loaded successfully!", "success");
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+            this.showNotification("⚠️ Error loading fresh data - using cached data", "warning");
+        }
     }
     
     async loadFunFacts() {
@@ -570,6 +616,41 @@ class ExploreApp {
             this.chart.update();
         }
     }
+    
+    async loadInitialNASAData() {
+        // Load initial NASA data for a default location to populate the chart
+        try {
+            // Use New York City as default location for initial data
+            const defaultLat = 40.7128;
+            const defaultLon = -74.0060;
+            
+            this.showNotification("🛰️ Loading real NASA satellite data...", "info");
+            
+            const response = await fetch(`/api/bloom-data?lat=${defaultLat}&lon=${defaultLon}`);
+            const nasaData = await response.json();
+            
+            if (nasaData && nasaData.data && nasaData.data.length > 0) {
+                // Update the chart with real NASA data
+                this.updateChart(nasaData);
+                
+                // Update the plant health scoreboard
+                this.updatePlantHealthScoreboard(defaultLat, defaultLon, nasaData);
+                
+                // Show NASA data prominently
+                this.showNASAData(nasaData, defaultLat, defaultLon);
+                
+                this.showNotification(
+                    `🛰️ Real NASA data loaded! Source: ${nasaData.data_availability}`,
+                    'success'
+                );
+            } else {
+                this.showNotification("⚠️ Using sample data - NASA API temporarily unavailable", "warning");
+            }
+        } catch (error) {
+            console.error('Error loading initial NASA data:', error);
+            this.showNotification("⚠️ Using sample data - NASA API temporarily unavailable", "warning");
+        }
+    }
 }
 
 // Global functions for HTML onclick events
@@ -597,6 +678,8 @@ function showNextFact() {
 let exploreApp;
 document.addEventListener('DOMContentLoaded', () => {
     exploreApp = new ExploreApp();
+    // Make exploreApp globally accessible for debugging and HTML onclick events
+    window.exploreApp = exploreApp;
 });
 
 // Add CSS animations
