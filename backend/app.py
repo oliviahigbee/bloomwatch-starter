@@ -2644,6 +2644,18 @@ def get_nasa_apod():
             }
         })
 
+@app.route('/api/test-env')
+def test_env():
+    """Test endpoint to check if .env file is being loaded"""
+    api_key = os.getenv('NASA_API_KEY', 'NOT_FOUND')
+    return jsonify({
+        'api_key_loaded': api_key != 'NOT_FOUND',
+        'api_key_value': api_key[:10] + '...' if api_key != 'NOT_FOUND' else 'NOT_FOUND',
+        'api_key_length': len(api_key) if api_key != 'NOT_FOUND' else 0,
+        'env_file_exists': os.path.exists('.env'),
+        'working_directory': os.getcwd()
+    })
+
 @app.route('/api/nasa-space-facts')
 def get_nasa_space_facts():
     """Get fun NASA space facts for kids"""
